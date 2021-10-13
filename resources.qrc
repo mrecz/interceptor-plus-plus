@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/img">
+        <file alias="IconEdit">assets/icons8-edit.svg</file>
+        <file alias="IconImage">assets/icons8-picture.svg</file>
+        <file alias="IconPlus">assets/icons8-plus-+.svg</file>
+        <file alias="IconSettings">assets/icons8-settings.svg</file>
+        <file alias="IconMain">assets/icons8-external-link.svg</file>
+        <file alias="IconSave">assets/icons8-save-48.png</file>
+        <file alias="IconHelp">assets/icons8-help-48.png</file>
+        <file alias="IconBorder">assets/icons8-fence-48.png</file>
+    </qresource>
+</RCC>
