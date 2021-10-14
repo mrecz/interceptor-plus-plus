@@ -1,4 +1,6 @@
 #include "overlay.h"
+#include "interceptor.h"
+
 #include <QObject>
 #include <QEvent>
 #include <QKeyEvent>
@@ -7,15 +9,18 @@
 #include <QPoint>
 #include <QRect>
 #include <QSize>
-#include "interceptor.h"
 
-Overlay::Overlay(QWidget *parent) : QWidget(parent), bMousePressed(false), origin(QPoint()), selectedArea(QRect()), rubberBand(nullptr)
+
+Overlay::Overlay(QWidget *parent) : QWidget(parent)
+  , bMousePressed(false)
+  , origin(QPoint())
+  , selectedArea(QRect())
+  , rubberBand(new QRubberBand(QRubberBand::Rectangle, this))
 {
     setWindowState(Qt::WindowFullScreen);
     setWindowFlags(Qt::FramelessWindowHint | Qt::CustomizeWindowHint);
     hide();
     setWindowOpacity(0.2);
-    rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
 }
 
 

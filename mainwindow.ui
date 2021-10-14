@@ -22,7 +22,14 @@
     <item row="0" column="0">
      <layout class="QVBoxLayout" name="verticalLayout" stretch="0">
       <item>
-       <widget class="QGraphicsView" name="graphicsView"/>
+       <widget class="QGraphicsView" name="graphicsView">
+        <property name="mouseTracking">
+         <bool>true</bool>
+        </property>
+        <property name="dragMode">
+         <enum>QGraphicsView::RubberBandDrag</enum>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
@@ -71,6 +78,7 @@
    <addaction name="actionSave"/>
    <addaction name="separator"/>
    <addaction name="actionBorder"/>
+   <addaction name="actionAdd_Rect"/>
    <addaction name="separator"/>
    <addaction name="actionHelp"/>
   </widget>
@@ -168,6 +176,24 @@
    </property>
    <property name="statusTip">
     <string>Add Grey Border (checked by default)</string>
+   </property>
+  </action>
+  <action name="actionAdd_Rect">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/img/IconRect</normaloff>:/img/IconRect</iconset>
+   </property>
+   <property name="text">
+    <string>Add Rect</string>
+   </property>
+   <property name="toolTip">
+    <string>Check to draw red rectangle</string>
+   </property>
+   <property name="statusTip">
+    <string>Drawing mode</string>
    </property>
   </action>
  </widget>

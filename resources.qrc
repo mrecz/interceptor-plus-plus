@@ -8,5 +8,6 @@
         <file alias="IconSave">assets/icons8-save-48.png</file>
         <file alias="IconHelp">assets/icons8-help-48.png</file>
         <file alias="IconBorder">assets/icons8-fence-48.png</file>
+        <file alias="IconRect">assets/icons8-full-image-50.png</file>
     </qresource>
 </RCC>

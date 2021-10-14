@@ -36,12 +36,17 @@ private slots:
 
     void displayScreenshot();
 
+    void on_actionAdd_Rect_changed();
+
 private:
     Ui::MainWindow *ui;
 
     const QString WINDOW_TITLE{"Interceptor++"};
     class Overlay* overlay;
-    class QGraphicsScene* scene;
+    class GraphicsScene* scene;
+
+signals:
+    void rectButtonChanged(bool bIsChecked);
 
 };
 #endif // MAINWINDOW_H

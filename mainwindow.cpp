@@ -1,25 +1,24 @@
 #include <QMessageBox>
-#include <QGraphicsScene>
-#include <QColor>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "graphicsscene.h"
 #include "interceptor.h"
 #include "overlay.h"
-#include <QGraphicsPixmapItem>
+
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , overlay(new Overlay())
+    , scene(new GraphicsScene(this))
 {
     ui->setupUi(this);
+    ui->graphicsView->setScene(scene);
     setMouseTracking(true);
-    overlay = new Overlay();
-    scene = new QGraphicsScene();
 
     connect(overlay, SIGNAL(screenshotCreated()), this, SLOT(displayScreenshot()));
 }
-
 
 void MainWindow::notImplemented()
 {
@@ -27,37 +26,29 @@ void MainWindow::notImplemented()
     mBox.information(this, WINDOW_TITLE, "This feature will come soon.");
 }
 
-
 void MainWindow::on_actionSave_As_triggered()
 {
    notImplemented();
 }
 
-
 void MainWindow::displayScreenshot()
 {
+    this->show();
     scene->clear();
+    scene->clearReferencedObjects();
 
     if (ui->actionBorder->isChecked())
     {
-        QPixmap border = QPixmap(Interceptor::screenshotMap->width() + 4, Interceptor::screenshotMap->height() + 4);
-        border.fill(QColor(203, 203, 203));
-        scene->addPixmap(border);
-
+        scene->addBorderToScene();
     }
-    QGraphicsPixmapItem* img = scene->addPixmap(*Interceptor::screenshotMap);
-    img->setPos(img->x() + 2, img->y() + 2);
-    ui->graphicsView->setScene(scene);
 
-    Interceptor::cleanup();
+    scene->addImageToScene();
 }
-
 
 void MainWindow::on_actionExit_triggered()
 {
     qApp->exit();
 }
-
 
 void MainWindow::on_actionHelp_triggered()
 {
@@ -73,23 +64,26 @@ void MainWindow::on_actionHelp_triggered()
                );
 }
 
-
 void MainWindow::on_actionTake_Shot_triggered()
 {
+    this->hide();
     overlay->show();
 }
 
-
 void MainWindow::on_actionSave_triggered()
 {
-    notImplemented();
+    scene->render();
 }
-
 
 void MainWindow::on_actionAbout_triggered()
 {
     QMessageBox mBox;
     mBox.aboutQt(this, WINDOW_TITLE);
+}
+
+void MainWindow::on_actionAdd_Rect_changed()
+{
+    emit rectButtonChanged(ui->actionAdd_Rect->isChecked());
 }
 
 MainWindow::~MainWindow()
@@ -98,6 +92,8 @@ MainWindow::~MainWindow()
     delete overlay;
     delete scene;
 }
+
+
 
 
 
