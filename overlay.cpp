@@ -9,6 +9,7 @@
 #include <QPoint>
 #include <QRect>
 #include <QSize>
+#include <QIcon>
 
 
 Overlay::Overlay(QWidget *parent) : QWidget(parent)
@@ -21,9 +22,10 @@ Overlay::Overlay(QWidget *parent) : QWidget(parent)
     setWindowFlags(Qt::FramelessWindowHint | Qt::CustomizeWindowHint);
     hide();
     setWindowOpacity(0.2);
+    setWindowIcon(QIcon(":/img/IconMain"));
 }
 
-
+/** Fullscreen overlay transparent widget, handle only mouse events + ESC for closing the widget */
 bool Overlay::event(QEvent* event)
 {
     if (event->type() == QEvent::KeyPress)
@@ -33,6 +35,7 @@ bool Overlay::event(QEvent* event)
             if (keyEvent->key() == Qt::Key_Escape)
             {
                 this->hide();
+                emit cancelled();
             }
         }
 

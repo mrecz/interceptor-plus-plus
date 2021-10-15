@@ -21,6 +21,7 @@ private:
 
 signals:
     void screenshotCreated();
+    void cancelled();
 
 public slots:
 

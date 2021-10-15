@@ -1,12 +1,9 @@
 #ifndef GRAPHICSSCENE_H
 #define GRAPHICSSCENE_H
 
-#include <QString>
-#include <QFileDialog>
 #include <QGraphicsScene>
 #include <QObject>
-#include <QPen>
-#include <QColor>
+#include <string>
 
 class GraphicsScene : public QGraphicsScene
 {
@@ -28,7 +25,7 @@ public:
 private:
     QWidget* parent;
     bool bDrawRectEnabled;
-    class std::vector<class QGraphicsPixmapItem*> items;
+    class std::map<std::string, class QGraphicsPixmapItem*> objects;
     class QRectF rect;
     class QPointF origin;
     const QPen PEN = QPen(QPen(Qt::red, 2));
@@ -36,6 +33,7 @@ private:
 
 private slots:
     void setDrawRectStatus(bool bIsChecked);
+    void handleBorderButtonChanged(bool bIsChecked);
 };
 
 #endif // GRAPHICSSCENE_H

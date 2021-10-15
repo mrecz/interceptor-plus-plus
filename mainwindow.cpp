@@ -18,12 +18,13 @@ MainWindow::MainWindow(QWidget* parent)
     setMouseTracking(true);
 
     connect(overlay, SIGNAL(screenshotCreated()), this, SLOT(displayScreenshot()));
+    connect(overlay, SIGNAL(cancelled()), this, SLOT(displayMainApp()));
 }
 
 void MainWindow::notImplemented()
 {
     QMessageBox mBox;
-    mBox.information(this, WINDOW_TITLE, "This feature will come soon.");
+    mBox.information(this, WINDOW_TITLE, "This feature is not implemented.");
 }
 
 void MainWindow::on_actionSave_As_triggered()
@@ -34,20 +35,25 @@ void MainWindow::on_actionSave_As_triggered()
 void MainWindow::displayScreenshot()
 {
     this->show();
-    scene->clear();
     scene->clearReferencedObjects();
+    scene->clear();
 
+
+    scene->addImageToScene();
     if (ui->actionBorder->isChecked())
     {
         scene->addBorderToScene();
-    }
-
-    scene->addImageToScene();
+    }    
 }
 
 void MainWindow::on_actionExit_triggered()
 {
     qApp->exit();
+}
+
+void MainWindow::displayMainApp()
+{
+   this->show();
 }
 
 void MainWindow::on_actionHelp_triggered()
@@ -86,15 +92,17 @@ void MainWindow::on_actionAdd_Rect_changed()
     emit rectButtonChanged(ui->actionAdd_Rect->isChecked());
 }
 
+void MainWindow::on_actionBorder_changed()
+{
+    emit borderButtonChanged(ui->actionBorder->isChecked());
+}
+
 MainWindow::~MainWindow()
 {
     delete ui;
     delete overlay;
     delete scene;
 }
-
-
-
 
 
 

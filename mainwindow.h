@@ -38,6 +38,10 @@ private slots:
 
     void on_actionAdd_Rect_changed();
 
+    void displayMainApp();
+
+    void on_actionBorder_changed();
+
 private:
     Ui::MainWindow *ui;
 
@@ -47,6 +51,7 @@ private:
 
 signals:
     void rectButtonChanged(bool bIsChecked);
+    void borderButtonChanged(bool bIsChecked);
 
 };
 #endif // MAINWINDOW_H
