@@ -5,6 +5,12 @@
 #include <QObject>
 #include <string>
 
+enum class MODE
+{
+    FILE        = 0x00,
+    CLIPBOARD   = 0x01
+};
+
 class GraphicsScene : public QGraphicsScene
 {
     Q_OBJECT
@@ -19,7 +25,7 @@ public:
 
     void addBorderToScene();
     void addImageToScene();
-    void render();
+    void render(MODE mode);
     void clearReferencedObjects();
 
 private:

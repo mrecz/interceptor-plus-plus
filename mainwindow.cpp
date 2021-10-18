@@ -3,7 +3,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "graphicsscene.h"
-#include "interceptor.h"
 #include "overlay.h"
 
 
@@ -78,7 +77,7 @@ void MainWindow::on_actionTake_Shot_triggered()
 
 void MainWindow::on_actionSave_triggered()
 {
-    scene->render();
+    scene->render(MODE::FILE);
 }
 
 void MainWindow::on_actionAbout_triggered()
@@ -97,12 +96,20 @@ void MainWindow::on_actionBorder_changed()
     emit borderButtonChanged(ui->actionBorder->isChecked());
 }
 
+void MainWindow::on_actionCopy_to_Clipboard_triggered()
+{
+    scene->render(MODE::CLIPBOARD);
+}
+
 MainWindow::~MainWindow()
 {
     delete ui;
     delete overlay;
     delete scene;
 }
+
+
+
 
 
 

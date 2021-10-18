@@ -42,6 +42,8 @@ private slots:
 
     void on_actionBorder_changed();
 
+    void on_actionCopy_to_Clipboard_triggered();
+
 private:
     Ui::MainWindow *ui;
 

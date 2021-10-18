@@ -76,6 +76,7 @@
    </attribute>
    <addaction name="actionTake_Shot"/>
    <addaction name="actionSave"/>
+   <addaction name="actionCopy_to_Clipboard"/>
    <addaction name="separator"/>
    <addaction name="actionBorder"/>
    <addaction name="actionAdd_Rect"/>
@@ -194,6 +195,21 @@
    </property>
    <property name="statusTip">
     <string>Drawing mode</string>
+   </property>
+  </action>
+  <action name="actionCopy_to_Clipboard">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/img/IconClipboard</normaloff>:/img/IconClipboard</iconset>
+   </property>
+   <property name="text">
+    <string>Copy to Clipboard</string>
+   </property>
+   <property name="toolTip">
+    <string>Copy Image to Clipboard</string>
+   </property>
+   <property name="statusTip">
+    <string>Copy image to the clipboard</string>
    </property>
   </action>
  </widget>

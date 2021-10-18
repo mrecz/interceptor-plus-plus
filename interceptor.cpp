@@ -4,6 +4,8 @@
 #include <QGuiApplication>
 #include <QWindow>
 #include <QWidget>
+#include <QImage>
+#include <QClipboard>
 
 
 void Interceptor::saveScreenAsPixelMap(QRect rect, QWidget* widget)
@@ -19,6 +21,11 @@ void Interceptor::saveScreenAsPixelMap(QRect rect, QWidget* widget)
     if (!screen) return;
 
     screenshotMap = new QPixmap(screen->grabWindow(winId, rect.x(), rect.y(), rect.width(), rect.height()));
+}
+
+void Interceptor::saveIntoClipboard(const QImage* grabbedImage)
+{
+    QGuiApplication::clipboard()->setImage(*grabbedImage);
 }
 
 void Interceptor::cleanup()

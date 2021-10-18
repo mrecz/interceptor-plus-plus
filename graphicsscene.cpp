@@ -143,7 +143,7 @@ void GraphicsScene::addImageToScene()
     Interceptor::cleanup();
 }
 
-void GraphicsScene::render()
+void GraphicsScene::render(MODE mode)
 {
     /** If the screenshot is captured, open save file dialog and save it */
     if(objects.find("img") != objects.end())
@@ -153,11 +153,19 @@ void GraphicsScene::render()
         QPainter p{ QPainter(&img) };
 
         QGraphicsScene::render(&p, img.rect(), croppedImage);
-
-        QString filename = QFileDialog::getSaveFileName(parent, "Save Image", QCoreApplication::applicationDirPath(), "PNG (*.png);;JPEG (*.JPEG);;BMP Files (*.bmp)");
-        if (!filename.isNull())
+        /** Check if SAVE or COPY TO CLIPBOARD button has been pressed */
+        if (mode == MODE::FILE)
         {
-            img.save(filename);
+            QString filename = QFileDialog::getSaveFileName(parent, "Save Image", QCoreApplication::applicationDirPath(), "PNG (*.png);;JPEG (*.JPEG);;BMP Files (*.bmp)");
+            if (!filename.isNull())
+            {
+                img.save(filename);
+
+            }
+        }
+        else
+        {
+            Interceptor::saveIntoClipboard(&img);
         }
     }
 }
