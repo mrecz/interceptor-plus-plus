@@ -50,6 +50,7 @@ private:
     const QString WINDOW_TITLE{"Interceptor++"};
     class Overlay* overlay;
     class GraphicsScene* scene;
+    class Interceptor* interceptor;
 
 signals:
     void rectButtonChanged(bool bIsChecked);

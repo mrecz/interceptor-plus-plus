@@ -4,14 +4,16 @@
 #include "ui_mainwindow.h"
 #include "graphicsscene.h"
 #include "overlay.h"
+#include "interceptor.h"
 
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , overlay(new Overlay())
-    , scene(new GraphicsScene(this))
+    , interceptor(new Interceptor(this))
 {
+    overlay = new Overlay(interceptor);
+    scene = new GraphicsScene(interceptor, this);
     ui->setupUi(this);
     ui->graphicsView->setScene(scene);
     setMouseTracking(true);
@@ -34,11 +36,12 @@ void MainWindow::on_actionSave_As_triggered()
 void MainWindow::displayScreenshot()
 {
     this->show();
+    /** Before adding a new sreenshot to the scene, clear and delete all old objects */
     scene->clearReferencedObjects();
     scene->clear();
 
-
     scene->addImageToScene();
+
     if (ui->actionBorder->isChecked())
     {
         scene->addBorderToScene();
@@ -58,20 +61,36 @@ void MainWindow::displayMainApp()
 void MainWindow::on_actionHelp_triggered()
 {
     QMessageBox mBox;
+    mBox.setTextFormat(Qt::TextFormat::RichText);
     mBox.about(this, WINDOW_TITLE,
-               "The program is designed for capturing screenshots. \n\n"
-               "See the important shortcuts below: \n"
-               "<F1>         HELP \n"
-               "<CTRL> + <T> TAKE SCREENSHOT \n"
-               "<CTRL> + <S> SAVE \n"
-               "<CTRL> + <X> EXIT \n\n"
-               "m.reznicek@quadient.com"
+               "<div>"
+                   "<b>The program is designed for capturing screenshots.</b>"
+                   "<p> </p>"
+                   "<p>See the important shorcuts below:</p>"
+                   "<p> </p>"
+                   "<dl>"
+                        "<dt><b>F1</b></dt>"
+                        "<dt>HELP</dt>"
+                        "<dt><b>CTRL + T</b></dt>"
+                        "<dt>TAKE SCREENSHOT</dt>"
+                        "<dt><b>ESC</b></dt>"
+                        "<dt>CANCEL SCREENSHOT WINDOW</dt>"
+                        "<dt><b>CTRL + S</b></dt>"
+                        "<dt>SAVE SCREENSHOT</dt>"
+                        "<dt><b>CTRL + X</b></dt>"
+                        "<dt>EXIT</dt>"
+                   "</dl>"
+                    "<p> </p>"
+                   "</hr>"
+                   "<p> </p>"
+                   "<p><i>The program is distributed under the GPL-2.0 License. The source code is available on GitHub: <a href='https://github.com/mrecz/interceptor-plus-plus'>https://github.com/mrecz/interceptor-plus-plus</i></p>"
+               "</div>"
                );
 }
 
 void MainWindow::on_actionTake_Shot_triggered()
 {
-    this->hide();
+    interceptor->saveWholeScreenAsPixmap();
     overlay->show();
 }
 
@@ -103,9 +122,11 @@ void MainWindow::on_actionCopy_to_Clipboard_triggered()
 
 MainWindow::~MainWindow()
 {
+    /** When the application window is destroyed, all objects are deleted */
     delete ui;
     delete overlay;
     delete scene;
+    delete interceptor;
 }
 
 

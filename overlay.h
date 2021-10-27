@@ -7,17 +7,21 @@ class Overlay : public QWidget
 {
     Q_OBJECT
 public:
-    explicit Overlay(QWidget* parent = nullptr);
+    explicit Overlay(class Interceptor* interceptor ,QWidget* parent = nullptr);
     ~Overlay();
 
 protected:
     bool event(QEvent* event) override;
+    void paintEvent(QPaintEvent* paintEvent) override;
 
 private:
     bool bMousePressed;
     class QPoint origin;
     class QRect selectedArea;
     class QRubberBand* rubberBand;
+    QColor backgroundColor;
+    Interceptor* interceptor;
+    QPixmap zoomedArea;
 
 signals:
     void screenshotCreated();
