@@ -157,6 +157,10 @@ void MainWindow::on_actionAdd_Rect_changed()
     {
         ui->graphicsView->setDragMode(QGraphicsView::DragMode::RubberBandDrag);
     }
+    else
+    {
+       ui->graphicsView->setDragMode(QGraphicsView::DragMode::NoDrag);
+    }
 }
 
 void MainWindow::on_actionBorder_changed()
