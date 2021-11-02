@@ -26,7 +26,7 @@ Overlay::Overlay(Interceptor* interceptor, QWidget *parent)
 
 {
     setWindowState(Qt::WindowFullScreen);
-    setWindowFlags(Qt::FramelessWindowHint | Qt::CustomizeWindowHint);
+    setWindowFlags(Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::WindowStaysOnTopHint);
     setAttribute(Qt::WA_TranslucentBackground);
     setWindowModality(Qt::ApplicationModal);
     setWindowIcon(QIcon(":/img/IconMain"));

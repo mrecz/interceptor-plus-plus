@@ -114,7 +114,7 @@
     <string>Help</string>
    </property>
    <property name="statusTip">
-    <string>F1</string>
+    <string>Important shortcuts...</string>
    </property>
    <property name="shortcut">
     <string>F1</string>
@@ -132,10 +132,10 @@
     <string>Create new screenshot</string>
    </property>
    <property name="statusTip">
-    <string>Press CTRL + S</string>
+    <string>Take a screenshot...</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+T</string>
+    <string/>
    </property>
   </action>
   <action name="actionSave">
@@ -148,6 +148,9 @@
    </property>
    <property name="toolTip">
     <string>Save image as PNG</string>
+   </property>
+   <property name="statusTip">
+    <string>Save image as PNG...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
@@ -209,7 +212,7 @@
     <string>Copy to Clipboard</string>
    </property>
    <property name="toolTip">
-    <string>Copy Image to Clipboard</string>
+    <string>Copy image to Clipboard</string>
    </property>
    <property name="statusTip">
     <string>Copy image to the clipboard</string>
