@@ -45,6 +45,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(overlay, SIGNAL(screenshotCreated()), this, SLOT(displayScreenshot()));
     connect(overlay, SIGNAL(cancelled()), this, SLOT(displayMainApp()));
 #ifdef _WIN32
+    connect(nativeEventFilter, SIGNAL(captureCurrentScreen()), this, SLOT(saveCurrentScreenAsPixmap()));
     connect(nativeEventFilter, SIGNAL(registredKeyPressed()), this, SLOT(on_actionTake_Shot_triggered()));
 #endif // _WIN32
 }
@@ -133,9 +134,17 @@ void MainWindow::on_actionHelp_triggered()
                );
 }
 
-void MainWindow::on_actionTake_Shot_triggered()
+void MainWindow::saveCurrentScreenAsPixmap()
 {
     interceptor->saveWholeScreenAsPixmap();
+}
+
+void MainWindow::on_actionTake_Shot_triggered()
+{
+    if (interceptor->getWholeScreenMap().isNull())
+    {
+        interceptor->saveWholeScreenAsPixmap();
+    }
     overlay->show();
 }
 

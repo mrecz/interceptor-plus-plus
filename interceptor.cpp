@@ -18,9 +18,11 @@ Interceptor::Interceptor(class QWidget* widget):
     mainScreen = getScreenPointer();
 }
 
-void Interceptor::saveScreenAsPixelMap(QRect rect, const int id)
+void Interceptor::saveScreenPartAsPixelMap(QRect rect, const int id)
 {
-    screenshotMap = QSharedPointer<QPixmap>(new QPixmap(mainScreen->grabWindow(id, rect.x(), rect.y(), rect.width(), rect.height())));
+
+    QRect cropped = QRect(rect.x(), rect.y(), rect.width(), rect.height());
+    screenshotMap = QSharedPointer<QPixmap>(new QPixmap(wholeScreenMap->copy(cropped)));
 }
 
 void Interceptor::saveIntoClipboard(const QImage* grabbedImage)
@@ -30,13 +32,19 @@ void Interceptor::saveIntoClipboard(const QImage* grabbedImage)
 
 void Interceptor::saveWholeScreenAsPixmap()
 {
-    mainWidget->hide();
+    if (mainWidget->isVisible())
+    {
+       mainWidget->hide();
+    }
 
     /** Timeout is necessary to get the parent widget time to hide itself */
     QThread::msleep(150);
 
     /** Grab the whole primary screen */
     QPixmap screenGrab = mainScreen->grabWindow(0);
+
+    /** Save the original screen; it will be used as background in the overlay widget */
+    wholeScreenMap = QSharedPointer<QPixmap>(new QPixmap(screenGrab));
 
     /** Store original dimensions */
     originalWidth = screenGrab.width();
@@ -49,8 +57,8 @@ void Interceptor::saveWholeScreenAsPixmap()
     scaledWidth = screenGrab.width();
     scaledHeight = screenGrab.height();
 
-    /** Temporary stack Pixmap is stored in pointer member variable */
-    wholeScreenMap = QSharedPointer<QPixmap>(new QPixmap(screenGrab));
+    /** Temporary stack scaled Pixmap is stored in pointer member variable */
+    wholeScreenMapScaled = QSharedPointer<QPixmap>(new QPixmap(screenGrab));
 }
 
 void Interceptor::getZoomedRectangle(QPixmap& destArea, QPoint cursorPos)
@@ -59,7 +67,7 @@ void Interceptor::getZoomedRectangle(QPixmap& destArea, QPoint cursorPos)
     QRect cropped = QRect(scaledCursorPos.x() - (static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2), scaledCursorPos.y() - (static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) / 2),
                           static_cast<int>(SCALE::ZOOMED_AREA_WIDTH),
                           static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT));
-    destArea = wholeScreenMap->copy(cropped);
+    destArea = wholeScreenMapScaled->copy(cropped);
 }
 
 QScreen* Interceptor::getScreenPointer()
@@ -102,6 +110,7 @@ int Interceptor::rangeTransformFormula(const int& value, const int& origMin, con
 void Interceptor::cleanup()
 {
     screenshotMap.clear();
+    wholeScreenMapScaled.clear();
     wholeScreenMap.clear();
 }
 

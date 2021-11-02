@@ -18,6 +18,7 @@ protected:
 
 signals:
     void registredKeyPressed();
+    void captureCurrentScreen();
 
 private:
     HWND winId;

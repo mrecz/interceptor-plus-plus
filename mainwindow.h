@@ -45,6 +45,8 @@ private slots:
     void on_actionBorder_changed();
 
     void on_actionCopy_to_Clipboard_triggered();
+
+    void saveCurrentScreenAsPixmap();
 #ifndef QT_NO_SYSTEMTRAYICON
     void iconActivated(QSystemTrayIcon::ActivationReason reason);
 #endif // QT_NO_SYSTEMTRAYICON

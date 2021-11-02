@@ -20,7 +20,7 @@ public:
     ~Interceptor();    
 
     /** Selected part of the screen is saved into the Pixmap object */
-    void saveScreenAsPixelMap(class QRect rect, const int id);
+    void saveScreenPartAsPixelMap(class QRect rect, const int id);
 
     /** Grabbed Image is coppied into the clipboard */
     void saveIntoClipboard(const class QImage* grabbedImage);
@@ -41,6 +41,7 @@ public:
 private:    
     QSharedPointer<QPixmap> screenshotMap{nullptr};
     QSharedPointer<QPixmap> wholeScreenMap{nullptr};
+    QSharedPointer<QPixmap> wholeScreenMapScaled{nullptr};
     QScreen* mainScreen;
     QWidget* mainWidget;
 

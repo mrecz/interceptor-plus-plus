@@ -20,7 +20,6 @@ Overlay::Overlay(Interceptor* interceptor, QWidget *parent)
   , origin(QPoint())
   , selectedArea(QRect())
   , rubberBand(new QRubberBand(QRubberBand::Rectangle, this))
-  , backgroundColor(palette().light().color())
   , interceptor(interceptor)
   , zoomedArea(QPixmap())
 
@@ -34,7 +33,6 @@ Overlay::Overlay(Interceptor* interceptor, QWidget *parent)
     setCursor(Qt::CrossCursor);
     setAttribute(Qt::WA_OpaquePaintEvent);
     setStyleSheet("selection-background-color: red;");
-    backgroundColor.setAlpha(30);
     hide();
 }
 
@@ -49,6 +47,7 @@ bool Overlay::event(QEvent* event)
         if (keyEvent->key() == Qt::Key_Escape)
         {
             this->hide();
+            interceptor->cleanup();
             emit cancelled();
         }
 
@@ -111,9 +110,9 @@ bool Overlay::event(QEvent* event)
 
        /** Take a screenshot only if user has made a selection, do not if he has clicked accidentally */
        if (selectedArea.width() != -1 && selectedArea.height() != -1)
-       {
+       {           
+           interceptor->saveScreenPartAsPixelMap(selectedArea, 0);
            hide();
-           interceptor->saveScreenAsPixelMap(selectedArea, 0);
            emit screenshotCreated();
        }
 
@@ -132,8 +131,8 @@ void Overlay::paintEvent(QPaintEvent* paintEvent)
     QWidget::paintEvent(paintEvent);
 
     QPainter painter(this);
-    /** Fill wdiget with a semi transparent background */
-    painter.fillRect(rect(),backgroundColor);
+    /** Fill widget with the pixmap background */
+    painter.drawPixmap(rect(), *interceptor->getWholeScreenMap().get());
 
 
     /** Creates coord lines */

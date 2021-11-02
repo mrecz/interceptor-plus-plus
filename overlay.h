@@ -19,7 +19,6 @@ private:
     class QPoint origin;
     class QRect selectedArea;
     class QRubberBand* rubberBand;
-    QColor backgroundColor;
     Interceptor* interceptor;
     QPixmap zoomedArea;
 

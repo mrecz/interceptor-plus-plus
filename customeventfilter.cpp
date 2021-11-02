@@ -11,6 +11,8 @@ bool CustomEventFilter::nativeEventFilter(const QByteArray &eventType, void* mes
    MSG* msg = static_cast<MSG*>(message);
    if (msg->message == WM_HOTKEY)
    {
+       /** Current screen must be captured immediately before the active window lost focus; e.g. if some context menu is opened, it must persist. */
+       emit captureCurrentScreen();
        /** Even if the application is not active (minimized, without focus, etc.) the overlay window must be on the top and receive keyboard strokes */
        SetForegroundWindow(winId);
        /** Emit signal which will be received by main window which handles the rest */
