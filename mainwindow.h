@@ -57,6 +57,7 @@ private:
     class Overlay* overlay;
     class GraphicsScene* scene;
     class Interceptor* interceptor;
+    bool bShouldBeTrayDialogDisplayed;
 
 #ifndef QT_NO_SYSTEMTRAYICON
     QSystemTrayIcon* trayIcon;

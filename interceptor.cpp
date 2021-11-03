@@ -18,7 +18,7 @@ Interceptor::Interceptor(class QWidget* widget):
     mainScreen = getScreenPointer();
 }
 
-void Interceptor::saveScreenPartAsPixelMap(QRect rect, const int id)
+void Interceptor::saveScreenPartAsPixelMap(QRect rect)
 {
 
     QRect cropped = QRect(rect.x(), rect.y(), rect.width(), rect.height());
@@ -32,13 +32,8 @@ void Interceptor::saveIntoClipboard(const QImage* grabbedImage)
 
 void Interceptor::saveWholeScreenAsPixmap()
 {
-    if (mainWidget->isVisible())
-    {
-       mainWidget->hide();
-    }
-
     /** Timeout is necessary to get the parent widget time to hide itself */
-    QThread::msleep(150);
+    QThread::msleep(180);
 
     /** Grab the whole primary screen */
     QPixmap screenGrab = mainScreen->grabWindow(0);

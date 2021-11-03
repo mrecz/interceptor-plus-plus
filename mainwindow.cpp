@@ -17,9 +17,10 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , interceptor(new Interceptor(this))
+    , bShouldBeTrayDialogDisplayed(true)
 #ifdef _WIN32
     , takeScreenshotHotkey(new Hotkey(this, MODIFIERS::NOREPEAT, KEYCODES::KEY_PRINTSCR, winId(), "PrintSCR", WINDOW_TITLE))
-#endif // _WIN32
+#endif // _WIN32    
 {
     overlay = new Overlay(interceptor);
     scene = new GraphicsScene(interceptor, this);
@@ -35,6 +36,8 @@ MainWindow::MainWindow(QWidget* parent)
     /** Rubber Band Properties - It is enabled and with the red background color */
     setStyleSheet("selection-background-color: red;");
     ui->graphicsView->setDragMode(QGraphicsView::DragMode::NoDrag);
+    /** Without underlying image, drawing functionality is disabled*/
+    ui->actionAdd_Rect->setDisabled(true);
 
     /** Construct the tray icon if possible */
 #ifndef QT_NO_SYSTEMTRAYICON
@@ -53,12 +56,18 @@ MainWindow::MainWindow(QWidget* parent)
 void MainWindow::closeEvent(QCloseEvent* event)
 {
 #ifndef QT_NO_SYSTEMTRAYICON
-    QMessageBox msgBox;
-    msgBox.setTextFormat(Qt::TextFormat::RichText);
-    msgBox.information(this, WINDOW_TITLE, "The program will keep running in the "
-                                           "system tray. To terminate the program, "
-                                           "choose <b>Quit</b> in the context menu "
-                                           "of the system tray entry.");
+    if (bShouldBeTrayDialogDisplayed)
+    {
+        QMessageBox msgBox;
+        msgBox.setTextFormat(Qt::TextFormat::RichText);
+        msgBox.information(this, WINDOW_TITLE, "The program will keep running in the "
+                                               "system tray. To terminate the program, "
+                                               "choose <b>Quit</b> in the context menu "
+                                               "of the system tray entry."
+                                               "<p> </p>"
+                                               "<b>This dialog is displayed only once.</b>");
+        bShouldBeTrayDialogDisplayed = false;
+    }
     hide();
     event->ignore();
 #else
@@ -79,6 +88,7 @@ void MainWindow::on_actionSave_As_triggered()
 
 void MainWindow::displayScreenshot()
 {
+    ui->actionAdd_Rect->setDisabled(false);
     displayMainApp();
     /** Restore the window */
     setWindowState(windowState() & ~Qt::WindowMinimized | Qt::WindowActive);
@@ -126,7 +136,13 @@ void MainWindow::on_actionHelp_triggered()
                         "<dt><b>CTRL + X</b></dt>"
                         "<dt>EXIT</dt>"
                    "</dl>"
-                    "<p> </p>"
+                   "<p> </p>"
+                   "<p><b><u>Drawing Mode</u></b> - <i>Can be enabled by clicking on the Drawing Mode button. Available only if the screenshot exists.</i></p>"
+                   "<p>If Drawing Mode is enabled, you can draw new objects by holding the <b>right mouse button</b> and dragging the mouse.</p>"
+                   "<p>Existing rectangles can be moved by holding the <b>left mouse button</b> and dragging the mouse.</p>"
+                   "<p>Existing rectangles can be resized by placing the cursor over the object and using the <b>mouse wheel</b>.</p>"
+                   "<p>Existing rectangles can be deleted by placing the cursor over the object and double clicking with the <b>left mouse button</b>.</p>"
+                   "<p> </p>"
                    "</hr>"
                    "<p> </p>"
                    "<p><i>The program is distributed under the GPL-2.0 License. The source code is available on GitHub: <a href='https://github.com/mrecz/interceptor-plus-plus'>https://github.com/mrecz/interceptor-plus-plus</i></p>"
@@ -141,10 +157,19 @@ void MainWindow::saveCurrentScreenAsPixmap()
 
 void MainWindow::on_actionTake_Shot_triggered()
 {
+    /** If the screenshot action is triggered directly from the main window, the main window should be displayed even if the screenshot is cancelled */
+    overlay->setWasMainWindowVisible(isVisible());
+
+    if (isVisible())
+    {
+        hide();
+    }
+
     if (interceptor->getWholeScreenMap().isNull())
     {
         interceptor->saveWholeScreenAsPixmap();
-    }
+    }    
+
     overlay->show();
 }
 
@@ -218,10 +243,10 @@ void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
 {
     switch(reason)
     {
-        case QSystemTrayIcon::Trigger:
         case QSystemTrayIcon::DoubleClick:
              /** Restore the window */
             setWindowState(windowState() & ~Qt::WindowMinimized | Qt::WindowActive);
+            displayMainApp();
             break;
         default:
             return;

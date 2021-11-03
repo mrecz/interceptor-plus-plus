@@ -20,7 +20,7 @@ public:
     ~Interceptor();    
 
     /** Selected part of the screen is saved into the Pixmap object */
-    void saveScreenPartAsPixelMap(class QRect rect, const int id);
+    void saveScreenPartAsPixelMap(class QRect rect);
 
     /** Grabbed Image is coppied into the clipboard */
     void saveIntoClipboard(const class QImage* grabbedImage);

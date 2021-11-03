@@ -25,6 +25,7 @@ GraphicsScene::GraphicsScene(Interceptor* interceptor, QObject *parent)
   , bDrawRectEnabled(false)
   , interceptor(interceptor)
   , savePath("")
+  , itemUnderCursor(nullptr)
 {
     connect(parent, SIGNAL(rectButtonChanged(bool)), this, SLOT(setDrawRectStatus(bool)));
     connect(parent, SIGNAL(borderButtonChanged(bool)), this, SLOT(handleBorderButtonChanged(bool)));
@@ -38,13 +39,13 @@ void GraphicsScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* mouseEvent)
         *   To make sure that user will not delete underlaying image or border
         *   Delete only the item with Z-index = 50 which are overlay objects (rects, arrows, etc.)
         */
-        QSharedPointer<QGraphicsItem> item = QSharedPointer<QGraphicsItem>(itemAt(mouseEvent->scenePos(), QTransform()));
-
+        QGraphicsItem* item = itemAt(mouseEvent->scenePos(), QTransform());
         if (item)
         {
             if (item->zValue() == 50)
             {
-               item.clear();
+               removeItem(item);
+               delete item;
             }
         }
     }
@@ -56,8 +57,17 @@ void GraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent* mouseEvent)
     /** If drawing rectangles functionality is ON, save the place where user has started the selection */
     if (bDrawRectEnabled)
     {
-        origin = mouseEvent->scenePos();
-        rect = QRectF(origin, QSize());
+        /** Track which mouse button has been pressed to determine the action */
+        pressedButton = mouseEvent->button();
+        switch(pressedButton)
+        {
+            case Qt::MouseButton::RightButton:
+                origin = mouseEvent->scenePos();
+                rect = QRectF(origin, QSize());
+                break;
+            default:
+                QGraphicsScene::mouseMoveEvent(mouseEvent);
+        }
     }
     QGraphicsScene::mousePressEvent(mouseEvent);
 }
@@ -67,9 +77,26 @@ void GraphicsScene::mouseMoveEvent(QGraphicsSceneMouseEvent* mouseEvent)
      /** If drawing rectangles functionality is ON, update the rectangle size according to the selection */
     if (bDrawRectEnabled)
     {
-         rect = QRectF(origin, mouseEvent->scenePos());
+        updateItemUnderMouseCursor(mouseEvent->scenePos());
+
+        switch(pressedButton)
+        {
+            case Qt::MouseButton::RightButton:
+                /** Is the rect drawn from top left or bottom right corner */
+                if (origin.x() < mouseEvent->scenePos().x())
+                {
+                    rect = QRectF(origin, mouseEvent->scenePos());
+                }
+                else
+                {
+                    rect = QRectF(mouseEvent->scenePos(), origin);
+                }
+                break;
+            default:
+                QGraphicsScene::mouseMoveEvent(mouseEvent);
+        }
     }
-    QGraphicsScene::mouseMoveEvent(mouseEvent);
+   QGraphicsScene::mousePressEvent(mouseEvent);
 }
 
 void GraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* mouseEvent)
@@ -77,14 +104,46 @@ void GraphicsScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* mouseEvent)
      /** If drawing rectangles functionality is ON, draw a red ractangle */
     if (bDrawRectEnabled)
     {
-        /** Draw rect only if the size is bigger than "dot" to make sure that no rects will be added on double click */
-        if (rect.size().width() > 1)
+        switch(pressedButton)
         {
-            QGraphicsRectItem* newRect = addRect(rect, PEN);
-            newRect->setZValue(50);
+            case Qt::MouseButton::RightButton:
+                /** Draw rect only if the size is bigger than "dot" to make sure that no rects will be added on double click */
+                if (rect.size().width() > 3 && rect.size().height() > 3)
+                {
+                    drawRect(rect);
+                }
+                break;
+            default:
+                QGraphicsScene::mouseMoveEvent(mouseEvent);
         }
     }
-    QGraphicsScene::mouseReleaseEvent(mouseEvent);
+    QGraphicsScene::mousePressEvent(mouseEvent);
+}
+
+void GraphicsScene::wheelEvent(QGraphicsSceneWheelEvent* wheelEvent)
+{
+    /** Resize the rect under the mouse cursor according to the wheel movement: Wheel Up = +size, Wheel Down = -size */
+    if (bDrawRectEnabled)
+    {
+        if (itemUnderCursor)
+        {
+            if (wheelEvent->delta() < 0)
+            {
+               resizeRect(RESIZE_MODE::MINUS);
+            }
+            else
+            {
+               resizeRect(RESIZE_MODE::PLUS);
+            }
+
+        }
+        else
+        {
+          QGraphicsScene::wheelEvent(wheelEvent);
+        }
+    }
+    QGraphicsScene::wheelEvent(wheelEvent);
+    wheelEvent->accept();
 }
 
 void GraphicsScene::setDrawRectStatus(bool bIsChecked)
@@ -188,6 +247,64 @@ void GraphicsScene::render(MODE mode)
             interceptor->saveIntoClipboard(&img);
         }
     }
+}
+
+void GraphicsScene::updateItemUnderMouseCursor(const QPointF mousePos)
+{
+    /** Check if item is not the background and is not nullptr */
+    QGraphicsItem* item = itemAt(mousePos, QTransform());
+    if (item && item->zValue() == 50)
+    {
+        itemUnderCursor = itemAt(mousePos, QTransform());
+    }
+    else
+    {
+        itemUnderCursor = nullptr;
+    }
+}
+
+void GraphicsScene::drawRect(QRectF rectangle)
+{
+    /** To ensure that rect will have correct coords in the scene, draw it on [0,0] and then set the correct scene position */
+    QGraphicsRectItem* newRect = addRect(QRectF(0, 0, rectangle.width(), rectangle.height()), PEN);
+    newRect->setPos(rectangle.topLeft());
+    newRect->setZValue(50);
+    newRect->setFlags(QGraphicsItem::ItemIsMovable);
+    newRect->setAcceptedMouseButtons(Qt::MouseButton::LeftButton);
+}
+
+void GraphicsScene::resizeRect(RESIZE_MODE mode)
+{
+    /** Fake resize, it create a new object, either bigger or smaller and delete the old one */
+    QRectF box = itemUnderCursor->boundingRect();
+    QPointF pos = itemUnderCursor->scenePos();
+    QPointF center = QPointF(pos.x() + box.width() / 2, pos.y() + box.height() / 2);
+    if (mode == RESIZE_MODE::MINUS)
+    {
+        /** The rect size can be reduced max to the min size */
+        if (box.width() > 20 && box.height() > 20)
+        {
+           drawRect(QRectF(pos.x() + 5, pos.y() + 5, box.width() - 10, box.height() - 10));
+           removeItem(itemUnderCursor);
+           delete itemUnderCursor;
+           updateItemUnderMouseCursor(center);
+        }
+    }
+    else
+    {
+        /** Max size is defined by the underlying image size if exists */
+        if (objects.find("img") != objects.end())
+        {
+            if (box.width() < objects["img"]->boundingRect().width() && box.height() < objects["img"]->boundingRect().height())
+            {
+                drawRect(QRectF(pos.x() - 5, pos.y() - 5, box.width() + 10, box.height() + 10));
+                removeItem(itemUnderCursor);
+                delete itemUnderCursor;
+                updateItemUnderMouseCursor(center);
+            }
+        }
+    }
+
 }
 
 void GraphicsScene::clearReferencedObjects()

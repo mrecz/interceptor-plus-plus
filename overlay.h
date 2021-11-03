@@ -16,18 +16,21 @@ protected:
 
 private:
     bool bMousePressed;
+    bool bWasMainWindowVisible;
     class QPoint origin;
     class QRect selectedArea;
     class QRubberBand* rubberBand;
     Interceptor* interceptor;
     QPixmap zoomedArea;
 
+public:
+    inline void setWasMainWindowVisible(bool bWasActive) { bWasMainWindowVisible = bWasActive; };
+
 signals:
     void screenshotCreated();
     void cancelled();
 
-public slots:
-
+private slots:
 
 };
 

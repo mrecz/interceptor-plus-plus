@@ -23,8 +23,14 @@
      <layout class="QVBoxLayout" name="verticalLayout" stretch="0">
       <item>
        <widget class="QGraphicsView" name="graphicsView">
+        <property name="cursor" stdset="0">
+         <cursorShape>CrossCursor</cursorShape>
+        </property>
         <property name="mouseTracking">
          <bool>true</bool>
+        </property>
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAsNeeded</enum>
         </property>
         <property name="dragMode">
          <enum>QGraphicsView::RubberBandDrag</enum>
@@ -194,10 +200,10 @@
      <normaloff>:/img/IconRect</normaloff>:/img/IconRect</iconset>
    </property>
    <property name="text">
-    <string>Add Rect</string>
+    <string>Drawing Mode</string>
    </property>
    <property name="toolTip">
-    <string>Check to draw red rectangle</string>
+    <string>Check to draw</string>
    </property>
    <property name="statusTip">
     <string>Drawing mode</string>

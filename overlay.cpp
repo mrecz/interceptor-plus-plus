@@ -17,6 +17,7 @@
 Overlay::Overlay(Interceptor* interceptor, QWidget *parent)
   : QWidget(parent)
   , bMousePressed(false)
+  , bWasMainWindowVisible(true)
   , origin(QPoint())
   , selectedArea(QRect())
   , rubberBand(new QRubberBand(QRubberBand::Rectangle, this))
@@ -48,7 +49,12 @@ bool Overlay::event(QEvent* event)
         {
             this->hide();
             interceptor->cleanup();
-            emit cancelled();
+
+            /** Emit the signal for restoring main window only if it was previously visible */
+            if (bWasMainWindowVisible)
+            {
+              emit cancelled();
+            }
         }
 
         if (keyEvent->key() == Qt::Key_Left)
@@ -111,7 +117,7 @@ bool Overlay::event(QEvent* event)
        /** Take a screenshot only if user has made a selection, do not if he has clicked accidentally */
        if (selectedArea.width() != -1 && selectedArea.height() != -1)
        {           
-           interceptor->saveScreenPartAsPixelMap(selectedArea, 0);
+           interceptor->saveScreenPartAsPixelMap(selectedArea);
            hide();
            emit screenshotCreated();
        }
