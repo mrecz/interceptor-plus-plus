@@ -3,15 +3,35 @@
 #include <QPixmap>
 #include <QPoint>
 #include <QSharedPointer>
+#include <QPair>
 
 enum class SCALE
 {
-    SCALE_FACTOR        = 4,
-    ZOOMED_AREA_WIDTH   = 100,
-    ZOOMED_AREA_HEIGHT  = 100
+    SCALE_FACTOR                = 4,
+    ZOOMED_AREA_WIDTH           = 100,
+    ZOOMED_AREA_HEIGHT          = 100,
+    ZOOMED_AREA_CURSOR_OFFSET   = 50
 };
 
 constexpr int CURSOR_MOVE_FACTOR{1};
+
+typedef struct Dimensions{
+    Dimensions(uint32_t origWidth, uint32_t origHeight, uint32_t scalWidth, uint32_t scalHeight)
+        : originalWidth(origWidth)
+        , originalHeight(origHeight)
+        , scaledWidth(scalWidth)
+        , scaledHeight(scalHeight)
+    {
+    };
+
+    uint32_t originalWidth;
+    uint32_t originalHeight;
+    uint32_t scaledWidth;
+    uint32_t scaledHeight;
+
+private:
+    Dimensions() = default;
+} Dimensions;
 
 class Interceptor
 {
@@ -20,7 +40,7 @@ public:
     ~Interceptor();    
 
     /** Selected part of the screen is saved into the Pixmap object */
-    void saveScreenPartAsPixelMap(class QRect rect, QString scrName);
+    void saveScreenPartAsPixelMap(class QRect rect, const QString scrName);
 
     /** Grabbed Image is coppied into the clipboard */
     void saveIntoClipboard(const class QImage* grabbedImage);
@@ -32,7 +52,7 @@ public:
     void saveScreensBackgroundAsPixmap();
 
     /** Return selected rectangle on defined coords from the scaled background of the particular screen */
-    void getZoomedRectangle(QPixmap& destArea, QPoint cursorPos, QString srcName);
+    QPair<int, int> getZoomedRectangle(QPixmap& destArea, QPoint cursorPos, const QString srcName);
 
     /** Public Getters */
     inline QSharedPointer<QPixmap> getScreenshotMap() const { return screenshotMap; };
@@ -54,13 +74,15 @@ private:
     std::map<const QString, QScreen*> screens;
 
     /** Variables for storing original and scaled screen size to transform cursor position */
-    uint32_t originalWidth;
-    uint32_t originalHeight;
-    uint32_t scaledWidth;
-    uint32_t scaledHeight;
+//    uint32_t originalWidth;
+//    uint32_t originalHeight;
+//    uint32_t scaledWidth;
+//    uint32_t scaledHeight;
+    /** Original and Scaled dimensions of all available screens */
+    std::map<const QString, Dimensions> dimensionMap;
 
     /** Transform cursor coords from original screen to scaled version of screen grabbed image */
-    QPoint getTransformedCursorPosition(const QPoint& originalCursorPosition);
+    QPoint getTransformedCursorPosition(const QPoint& originalCursorPosition, const QString srcName);
     int rangeTransformFormula(const int& value, const int& origMin, const int& origMax, const int& newMin, const int& newMax);
 
     /** Without Widget provided, Interceptor class cannot be instanciated */

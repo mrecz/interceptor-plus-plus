@@ -23,6 +23,9 @@ private:
     Interceptor* interceptor;
     QPixmap zoomedArea;
     QString screenName;
+    void drawZoomedArea(QPainter& painter, int& zoomedAreaX, int& zoomedAreaY, QPair<int, int>& corrections);
+    int screenWidth;
+    int screenHeight;
 
 public:
     inline void setWasMainWindowVisible(bool bWasActive) { bWasMainWindowVisible = bWasActive; };

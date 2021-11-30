@@ -13,6 +13,7 @@
 #include <QSize>
 #include <QIcon>
 #include <QWindow>
+#include <QPair>
 
 
 Overlay::Overlay(Interceptor* interceptor, QScreen* scr, QWidget *parent)
@@ -24,6 +25,8 @@ Overlay::Overlay(Interceptor* interceptor, QScreen* scr, QWidget *parent)
   , rubberBand(new QRubberBand(QRubberBand::Rectangle, this))
   , interceptor(interceptor)
   , zoomedArea(QPixmap())
+  , screenWidth(scr->availableGeometry().width())
+  , screenHeight(scr->availableGeometry().height())
 {
     setWindowState(Qt::WindowMaximized);
     windowHandle()->setScreen(scr);
@@ -154,24 +157,70 @@ void Overlay::paintEvent(QPaintEvent* paintEvent)
         painter.drawLine(QLineF(position.x(), 0, position.x(), interceptor->getScreenByName(screenName)->geometry().height()));
 
         /** Zoom area around the mouse cursor */
-        interceptor->getZoomedRectangle(zoomedArea, position, screenName);
-        painter.drawPixmap(position.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2,
-                           position.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) / 2,
-                           zoomedArea);
+        QPair<int, int> corrections = interceptor->getZoomedRectangle(zoomedArea, position, screenName);
 
-        /** Draw the crosshair over the zoomed area */
-        QPen pen = QPen(Qt::PenStyle::DashDotLine);
-        pen.setColor(QColor(Qt::red));
-        painter.setPen(pen);
-        painter.drawLine(QLineF(position.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) - static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2,
-                                position.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT),
-                                position.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2,
-                                position.y() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH)));
-        painter.drawLine(QLineF(position.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH),
-                                position.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) - static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2,
-                                position.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH),
-                                position.y() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2));
+        if (position.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenWidth &&
+            position.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenHeight )
+        {
+            int zoomedAreaX = position.x() - (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH));
+            int zoomedAreaY = position.y() - (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT));
+            drawZoomedArea(painter, zoomedAreaX, zoomedAreaY, corrections);
+        }
+        else if (position.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenWidth &&
+                 position.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) < screenHeight )
+        {
+            int zoomedAreaX = position.x() - (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH));
+            int zoomedAreaY = position.y() + (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET));
+            drawZoomedArea(painter, zoomedAreaX, zoomedAreaY, corrections);
+        }
+        else if (position.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenHeight )
+        {
+            int zoomedAreaX = position.x() + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET);
+            int zoomedAreaY = position.y() - (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT));
+            drawZoomedArea(painter, zoomedAreaX, zoomedAreaY, corrections);
+        }
+        else
+        {
+            int zoomedAreaX = position.x() + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET);
+            int zoomedAreaY = position.y() + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET);
+            drawZoomedArea(painter, zoomedAreaX, zoomedAreaY, corrections);
+        }
     }
+    else
+    {
+        painter.eraseRect(rect());
+        painter.drawPixmap(rect(), *interceptor->getBackgroundForWidget(screenName).get());
+    }
+}
+
+void Overlay::drawZoomedArea(QPainter& painter, int& zoomedAreaX, int& zoomedAreaY, QPair<int, int>& corrections)
+{
+    QPen pen = QPen(Qt::PenStyle::SolidLine);
+    pen.setColor(QColor(Qt::black));
+    pen.setWidth(2);
+    painter.setPen(pen);
+
+    painter.drawRect(zoomedAreaX - 2, zoomedAreaY - 2, zoomedArea.width() + 4, zoomedArea.height() + 4);
+    painter.drawPixmap(zoomedAreaX,
+                       zoomedAreaY,
+                       zoomedArea);
+
+    /** Draw the crosshair over the zoomed area */
+    pen.setStyle(Qt::PenStyle::DashDotLine);
+    pen.setColor(QColor(Qt::red));
+    pen.setWidth(1);
+    painter.setPen(pen);
+
+    /** Horizontal */
+    painter.drawLine(QLineF(zoomedAreaX,
+                            zoomedAreaY + corrections.second + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) / 2,
+                            zoomedAreaX + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH),
+                            zoomedAreaY + corrections.second + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) / 2));
+    /** Vertical */
+    painter.drawLine(QLineF(zoomedAreaX + corrections.first + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2,
+                            zoomedAreaY,
+                            zoomedAreaX + corrections.first + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2,
+                            zoomedAreaY + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT)));
 }
 
 Overlay::~Overlay()
