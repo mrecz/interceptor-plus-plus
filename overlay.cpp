@@ -12,9 +12,10 @@
 #include <QRect>
 #include <QSize>
 #include <QIcon>
+#include <QWindow>
 
 
-Overlay::Overlay(Interceptor* interceptor, QWidget *parent)
+Overlay::Overlay(Interceptor* interceptor, QScreen* scr, QWidget *parent)
   : QWidget(parent)
   , bMousePressed(false)
   , bWasMainWindowVisible(true)
@@ -23,17 +24,18 @@ Overlay::Overlay(Interceptor* interceptor, QWidget *parent)
   , rubberBand(new QRubberBand(QRubberBand::Rectangle, this))
   , interceptor(interceptor)
   , zoomedArea(QPixmap())
-
 {
+    setWindowState(Qt::WindowMaximized);
+    windowHandle()->setScreen(scr);
     setWindowState(Qt::WindowFullScreen);
     setWindowFlags(Qt::FramelessWindowHint | Qt::CustomizeWindowHint | Qt::WindowStaysOnTopHint);
     setAttribute(Qt::WA_TranslucentBackground);
-    setWindowModality(Qt::ApplicationModal);
     setWindowIcon(QIcon(":/img/IconMain"));
     setMouseTracking(true);
     setCursor(Qt::CrossCursor);
     setAttribute(Qt::WA_OpaquePaintEvent);
     setStyleSheet("selection-background-color: red;");
+    screenName = windowHandle()->screen()->name();
     hide();
 }
 
@@ -47,11 +49,15 @@ bool Overlay::event(QEvent* event)
 
         if (keyEvent->key() == Qt::Key_Escape)
         {
-            this->hide();
+            hide();
             interceptor->cleanup();
 
             /** Emit the signal for restoring main window only if it was previously visible */
             if (bWasMainWindowVisible)
+            {
+              emit cancelledDisplayMainApp();
+            }
+            else
             {
               emit cancelled();
             }
@@ -117,7 +123,7 @@ bool Overlay::event(QEvent* event)
        /** Take a screenshot only if user has made a selection, do not if he has clicked accidentally */
        if (selectedArea.width() != -1 && selectedArea.height() != -1)
        {           
-           interceptor->saveScreenPartAsPixelMap(selectedArea);
+           interceptor->saveScreenPartAsPixelMap(selectedArea, screenName);
            hide();
            emit screenshotCreated();
        }
@@ -138,35 +144,38 @@ void Overlay::paintEvent(QPaintEvent* paintEvent)
 
     QPainter painter(this);
     /** Fill widget with the pixmap background */
-    painter.drawPixmap(rect(), *interceptor->getWholeScreenMap().get());
+    painter.drawPixmap(rect(), *interceptor->getBackgroundForWidget(screenName).get());
 
+    /** Multiplescreens support, check if the cursor is over the overlay on the particular screen */
+    QPoint position = mapFromGlobal(QCursor::pos());
+    if (rect().contains(position)) {
+        /** Creates coord lines */
+        painter.drawLine(QLineF(0, position.y(), interceptor->getScreenByName(screenName)->geometry().width(), position.y()));
+        painter.drawLine(QLineF(position.x(), 0, position.x(), interceptor->getScreenByName(screenName)->geometry().height()));
 
-    /** Creates coord lines */
-    painter.drawLine(QLineF(0, QCursor::pos().y(), interceptor->getScreen()->geometry().width(), QCursor::pos().y()));
-    painter.drawLine(QLineF(QCursor::pos().x(), 0, QCursor::pos().x(), interceptor->getScreen()->geometry().height()));
+        /** Zoom area around the mouse cursor */
+        interceptor->getZoomedRectangle(zoomedArea, position, screenName);
+        painter.drawPixmap(position.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2,
+                           position.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) / 2,
+                           zoomedArea);
 
-
-    /** Zoom area around the mouse cursor */
-    interceptor->getZoomedRectangle(zoomedArea, QCursor::pos());
-    painter.drawPixmap(QCursor::pos().x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2,
-                       QCursor::pos().y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) / 2,
-                       zoomedArea);
-
-    /** Draw the crosshair over the zoomed area */
-    QPen pen = QPen(Qt::PenStyle::DashDotLine);
-    pen.setColor(QColor(Qt::red));
-    painter.setPen(pen);
-    painter.drawLine(QLineF(QCursor::pos().x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) - static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2,
-                            QCursor::pos().y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT),
-                            QCursor::pos().x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2,
-                            QCursor::pos().y() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH)));
-    painter.drawLine(QLineF(QCursor::pos().x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH),
-                            QCursor::pos().y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) - static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2,
-                            QCursor::pos().x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH),
-                            QCursor::pos().y() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2));
+        /** Draw the crosshair over the zoomed area */
+        QPen pen = QPen(Qt::PenStyle::DashDotLine);
+        pen.setColor(QColor(Qt::red));
+        painter.setPen(pen);
+        painter.drawLine(QLineF(position.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) - static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2,
+                                position.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT),
+                                position.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2,
+                                position.y() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH)));
+        painter.drawLine(QLineF(position.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH),
+                                position.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) - static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2,
+                                position.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH),
+                                position.y() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2));
+    }
 }
 
 Overlay::~Overlay()
 {
    delete rubberBand;
+   disconnect();
 }

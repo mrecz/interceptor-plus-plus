@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QSystemTrayIcon>
+#include <QSharedPointer>
 
 
 QT_BEGIN_NAMESPACE
@@ -42,6 +43,8 @@ private slots:
 
     void displayMainApp();
 
+    void deleteOverlays();
+
     void on_actionBorder_changed();
 
     void on_actionCopy_to_Clipboard_triggered();
@@ -54,7 +57,7 @@ private:
     Ui::MainWindow *ui;
 
     const QString WINDOW_TITLE{"Interceptor++"};
-    class Overlay* overlay;
+    class std::vector<class Overlay*> overlays;
     class GraphicsScene* scene;
     class Interceptor* interceptor;
     bool bShouldBeTrayDialogDisplayed;

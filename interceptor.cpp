@@ -7,6 +7,7 @@
 #include <QImage>
 #include <QClipboard>
 #include <QtMath>
+#include <map>
 
 Interceptor::Interceptor(class QWidget* widget):
     originalWidth(0)
@@ -15,14 +16,14 @@ Interceptor::Interceptor(class QWidget* widget):
   , scaledHeight(0)
 {
     mainWidget = widget;
-    mainScreen = getScreenPointer();
+    getScreenPointers();
 }
 
-void Interceptor::saveScreenPartAsPixelMap(QRect rect)
+void Interceptor::saveScreenPartAsPixelMap(QRect rect, QString srcName)
 {
 
     QRect cropped = QRect(rect.x(), rect.y(), rect.width(), rect.height());
-    screenshotMap = QSharedPointer<QPixmap>(new QPixmap(wholeScreenMap->copy(cropped)));
+    screenshotMap = QSharedPointer<QPixmap>(new QPixmap(getBackgroundForWidget(srcName)->copy(cropped)));
 }
 
 void Interceptor::saveIntoClipboard(const QImage* grabbedImage)
@@ -30,57 +31,53 @@ void Interceptor::saveIntoClipboard(const QImage* grabbedImage)
     QGuiApplication::clipboard()->setImage(*grabbedImage);
 }
 
-void Interceptor::saveWholeScreenAsPixmap()
+void Interceptor::saveScreensBackgroundAsPixmap()
 {
+    /** Recheck available screens, a user may disconnect a monitor meanwhile */
+    getScreenPointers();
+
     /** Timeout is necessary to get the parent widget time to hide itself */
     QThread::msleep(180);
 
-    /** Grab the whole primary screen */
-    QPixmap screenGrab = mainScreen->grabWindow(0);
+    /** Multiple screen setup */
+    for (const auto& screen : screens)
+    {
+        /** Each screen will have an overlay with the background stored here */
+        QPixmap scrGrab = screen.second->grabWindow(0);
+        screensBackgroundMap.insert(std::make_pair(screen.second->name(), QSharedPointer<QPixmap>(new QPixmap(scrGrab))));
 
-    /** Save the original screen; it will be used as background in the overlay widget */
-    wholeScreenMap = QSharedPointer<QPixmap>(new QPixmap(screenGrab));
+        /** Store original dimensions */
+        originalWidth = scrGrab.width();
+        originalHeight = scrGrab.height();
 
-    /** Store original dimensions */
-    originalWidth = screenGrab.width();
-    originalHeight = screenGrab.height();
+        /** Original screen grab is scaled by using the scale factor defined in the header file */
+        scrGrab = scrGrab.scaledToWidth(scrGrab.width() * static_cast<int>(SCALE::SCALE_FACTOR));
 
-    /** Original screen grab is scaled by using the scale factor defined in the header file */
-    screenGrab = screenGrab.scaledToWidth(screenGrab.width() * static_cast<int>(SCALE::SCALE_FACTOR));
+        /** Store scaled dimensions */
+        scaledWidth = scrGrab.width();
+        scaledHeight = scrGrab.height();
 
-    /** Store scaled dimensions */
-    scaledWidth = screenGrab.width();
-    scaledHeight = screenGrab.height();
-
-    /** Temporary stack scaled Pixmap is stored in pointer member variable */
-    wholeScreenMapScaled = QSharedPointer<QPixmap>(new QPixmap(screenGrab));
+        /** Each screen scaled background is stored as well for magnifying glass around cursor effect */
+        screensBackgroundScaledMap.insert(std::make_pair(screen.second->name(), QSharedPointer<QPixmap>(new QPixmap(scrGrab))));
+    }
 }
 
-void Interceptor::getZoomedRectangle(QPixmap& destArea, QPoint cursorPos)
+void Interceptor::getZoomedRectangle(QPixmap& destArea, QPoint cursorPos, QString srcName)
 {
     QPoint scaledCursorPos = getTransformedCursorPosition(cursorPos);
     QRect cropped = QRect(scaledCursorPos.x() - (static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2), scaledCursorPos.y() - (static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) / 2),
                           static_cast<int>(SCALE::ZOOMED_AREA_WIDTH),
                           static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT));
-    destArea = wholeScreenMapScaled->copy(cropped);
+    destArea = getScaledBackgroundForWidget(srcName)->copy(cropped);
 }
 
-QScreen* Interceptor::getScreenPointer()
+void Interceptor::getScreenPointers()
 {
-    QScreen* screen = QGuiApplication::primaryScreen();
-
-    if (const QWindow* window = mainWidget->windowHandle())
+    /** Multiple screens setup */
+    screens.clear();
+    for (const auto& scr : QGuiApplication::screens() )
     {
-       screen = window->screen();
-    }
-
-    if (!screen)
-    {
-        return nullptr;
-    }
-    else
-    {
-        return screen;
+        screens.insert(std::make_pair(scr->name(), scr));
     }
 }
 
@@ -105,8 +102,9 @@ int Interceptor::rangeTransformFormula(const int& value, const int& origMin, con
 void Interceptor::cleanup()
 {
     screenshotMap.clear();
-    wholeScreenMapScaled.clear();
-    wholeScreenMap.clear();
+    /**Multiple screens setup */
+    screensBackgroundMap.clear();
+    screensBackgroundScaledMap.clear();
 }
 
 Interceptor::~Interceptor()

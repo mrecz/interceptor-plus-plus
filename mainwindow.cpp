@@ -7,6 +7,7 @@
 #include "graphicsscene.h"
 #include "overlay.h"
 #include "interceptor.h"
+#include <vector>
 
 #ifdef _WIN32
 #include "hotkey.h"
@@ -22,12 +23,11 @@ MainWindow::MainWindow(QWidget* parent)
     , takeScreenshotHotkey(new Hotkey(this, MODIFIERS::NOREPEAT, KEYCODES::KEY_PRINTSCR, winId(), "PrintSCR", WINDOW_TITLE))
 #endif // _WIN32    
 {
-    overlay = new Overlay(interceptor);
     scene = new GraphicsScene(interceptor, this);
 
 #ifdef _WIN32
     /** Install Windows Event Filter and register global hotkey */
-    nativeEventFilter = new CustomEventFilter(overlay->winId());
+    nativeEventFilter = new CustomEventFilter();
     qApp->installNativeEventFilter(nativeEventFilter);
 #endif // _WIN32
 
@@ -44,9 +44,6 @@ MainWindow::MainWindow(QWidget* parent)
     createTrayIcon();
     connect(trayIcon, &QSystemTrayIcon::activated, this, &MainWindow::iconActivated);
 #endif // QT_NO_SYSTEMTRAYICON
-
-    connect(overlay, SIGNAL(screenshotCreated()), this, SLOT(displayScreenshot()));
-    connect(overlay, SIGNAL(cancelled()), this, SLOT(displayMainApp()));
 #ifdef _WIN32
     connect(nativeEventFilter, SIGNAL(captureCurrentScreen()), this, SLOT(saveCurrentScreenAsPixmap()));
     connect(nativeEventFilter, SIGNAL(registredKeyPressed()), this, SLOT(on_actionTake_Shot_triggered()));
@@ -112,6 +109,17 @@ void MainWindow::on_actionExit_triggered()
 void MainWindow::displayMainApp()
 {
    show();
+   deleteOverlays();
+}
+
+void MainWindow::deleteOverlays()
+{
+    /** All Overlay wdigets must be destroyed and disconnected; clear the vector do delete smart pointers which also deletes the referenced objects */
+    for(const auto& overlay : overlays)
+    {
+        overlay->deleteLater();
+    }
+    overlays.clear();
 }
 
 void MainWindow::on_actionHelp_triggered()
@@ -152,25 +160,51 @@ void MainWindow::on_actionHelp_triggered()
 
 void MainWindow::saveCurrentScreenAsPixmap()
 {
-    interceptor->saveWholeScreenAsPixmap();
+    interceptor->saveScreensBackgroundAsPixmap();
 }
 
 void MainWindow::on_actionTake_Shot_triggered()
 {
-    /** If the screenshot action is triggered directly from the main window, the main window should be displayed even if the screenshot is cancelled */
-    overlay->setWasMainWindowVisible(isVisible());
+    /** Recheck available screens */
+    interceptor->getScreenPointers();
+    /** Create overlay widget for each screen and store their WinIDs */
+    const auto screensMap = interceptor->getScreens();
+    for (const auto& screen : screensMap)
+    {
+        /** Each overlay holds the name of the display for which is created; it is used then for identifying from which screen the screenshot is taken */
+        overlays.push_back(new Overlay(interceptor, screen.second));
+    }
+    /** Connect signals from all created Overlay widgets */
+    std::vector<int> overlayWinIDs;
+    for (const auto& overlay : overlays)
+    {
+        connect(overlay, SIGNAL(screenshotCreated()), this, SLOT(displayScreenshot()));
+        connect(overlay, SIGNAL(cancelledDisplayMainApp()), this, SLOT(displayMainApp()));
+        connect(overlay, SIGNAL(cancelled()), this, SLOT(deleteOverlays()));
+        overlayWinIDs.push_back(overlay->winId());
+
+        /** If the screenshot action is triggered directly from the main window, the main window should be displayed even if the screenshot is cancelled */
+        overlay->setWasMainWindowVisible(isVisible());
+    }
+    /** WINIDs of all created overlay widgets must be known by event filter */
+    nativeEventFilter->setWinIDs(overlayWinIDs);
 
     if (isVisible())
     {
         hide();
     }
 
-    if (interceptor->getWholeScreenMap().isNull())
+    if (!interceptor->isBackgroundSaved())
     {
-        interceptor->saveWholeScreenAsPixmap();
+        saveCurrentScreenAsPixmap();
     }    
 
-    overlay->show();
+    for (const auto& overlay : overlays)
+    {
+        overlay->showFullScreen();
+        overlay->activateWindow();
+    }
+
 }
 
 void MainWindow::on_actionSave_triggered()
@@ -267,7 +301,6 @@ MainWindow::~MainWindow()
     delete quitAction;
 #endif // QT_NO_SYSTEMTRAYICON
     delete ui;
-    delete overlay;
     delete scene;
     delete interceptor;
 #ifdef _WIN32

@@ -7,7 +7,7 @@ class Overlay : public QWidget
 {
     Q_OBJECT
 public:
-    explicit Overlay(class Interceptor* interceptor ,QWidget* parent = nullptr);
+    explicit Overlay(class Interceptor* interceptor, QScreen* scr, QWidget* parent = nullptr);
     ~Overlay();
 
 protected:
@@ -22,6 +22,7 @@ private:
     class QRubberBand* rubberBand;
     Interceptor* interceptor;
     QPixmap zoomedArea;
+    QString screenName;
 
 public:
     inline void setWasMainWindowVisible(bool bWasActive) { bWasMainWindowVisible = bWasActive; };
@@ -29,6 +30,7 @@ public:
 signals:
     void screenshotCreated();
     void cancelled();
+    void cancelledDisplayMainApp();
 
 private slots:
 
