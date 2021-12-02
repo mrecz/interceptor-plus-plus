@@ -18,16 +18,19 @@
 #include <QGraphicsItem>
 #include <QSharedPointer>
 #include <QString>
+#include <QGraphicsSvgItem>
 
 GraphicsScene::GraphicsScene(Interceptor* interceptor, QObject *parent)
   : QGraphicsScene(parent)
   , parent(static_cast<QWidget*>(parent))
   , bDrawRectEnabled(false)
+  , bAddNumbersEnabled(false)
   , interceptor(interceptor)
   , savePath("")
   , itemUnderCursor(nullptr)
 {
     connect(parent, SIGNAL(rectButtonChanged(bool)), this, SLOT(setDrawRectStatus(bool)));
+    connect(parent, SIGNAL(numbersButtonChanged(bool)), this, SLOT(handleNumbersButtonChanged(bool)));
     connect(parent, SIGNAL(borderButtonChanged(bool)), this, SLOT(handleBorderButtonChanged(bool)));
 }
 
@@ -35,19 +38,11 @@ void GraphicsScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* mouseEvent)
 {
     if (bDrawRectEnabled)
     {
-        /** If the rect is double clicked, delete it
-        *   To make sure that user will not delete underlaying image or border
-        *   Delete only the item with Z-index = 50 which are overlay objects (rects, arrows, etc.)
-        */
-        QGraphicsItem* item = itemAt(mouseEvent->scenePos(), QTransform());
-        if (item)
-        {
-            if (item->zValue() == 50)
-            {
-               removeItem(item);
-               delete item;
-            }
-        }
+        deleteItem(mouseEvent, 50);
+    }
+    else if (bAddNumbersEnabled)
+    {
+       deleteItem(mouseEvent, 60);
     }
     QGraphicsScene::mouseDoubleClickEvent(mouseEvent);
 }
@@ -68,6 +63,20 @@ void GraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent* mouseEvent)
             default:
                 QGraphicsScene::mouseMoveEvent(mouseEvent);
         }
+    }
+    else if (bAddNumbersEnabled)
+    {
+        /** Track which mouse button has been pressed to determine the action */
+        pressedButton = mouseEvent->button();
+        switch(pressedButton)
+        {
+            case Qt::MouseButton::RightButton:
+                addNumber(mouseEvent);
+                break;
+            default:
+                QGraphicsScene::mouseMoveEvent(mouseEvent);
+        }
+
     }
     QGraphicsScene::mousePressEvent(mouseEvent);
 }
@@ -196,6 +205,12 @@ void GraphicsScene::handleBorderButtonChanged(bool bIsChecked)
     }
 }
 
+void GraphicsScene::handleNumbersButtonChanged(bool bIsChecked)
+{
+    /** Set member variable to the value of the NumberAction - true/false */
+    bAddNumbersEnabled = bIsChecked;
+}
+
 void GraphicsScene::addImageToScene()
 {
     /** Take a captured screen from the static Interceptor class add add it to scene; store the reference in the map */
@@ -318,6 +333,58 @@ void GraphicsScene::clearReferencedObjects()
         }
     }
     objects.clear();
+    for (const auto& number : numbers)
+    {
+        delete number.second;
+    }
+    numbers.clear();
+}
+
+void GraphicsScene::addNumber(QGraphicsSceneMouseEvent* mouseEvent)
+{
+    /** To add number, first we must check already existing numbers to return the correct one - max numbers == 10;
+     *  if there are already 10 numbers do not add a new one */
+
+    for(size_t i = 1; i < 11; i++)
+    {
+        if (numbers.find(i) == numbers.end())
+        {
+            QString numberName =  ":/numbering/";
+            numberName.append(QString::number(i));
+            QGraphicsSvgItem* item = new QGraphicsSvgItem(numberName);
+            /** Defines an element which should be taken from the SVG file
+            * In SVG Number files, the desired elements are named after the number which is drawn in the SVG file
+            */
+            item->setElementId(QString::number(i));
+            item->setZValue(60);
+            addItem(item);
+            item->setPos(mouseEvent->scenePos());
+            item->setFlags(QGraphicsItem::ItemIsMovable);
+            item->setAcceptedMouseButtons(Qt::MouseButton::LeftButton);
+            numbers.insert(std::make_pair(i, item));
+            break;
+        }
+    }
+}
+
+void GraphicsScene::deleteItem(QGraphicsSceneMouseEvent* mouseEvent, int zIndex)
+{
+    /** Deletes an item on the scene if exits udner the mouse pointer and with defined z-index */
+    QGraphicsItem* item = itemAt(mouseEvent->scenePos(), QTransform());
+    if (item)
+    {
+        if (item->zValue() == zIndex)
+        {
+           /** Check if the deleted item is a number and if so, delete it from numbers map by using the element ID */
+           QGraphicsSvgItem* number = dynamic_cast<QGraphicsSvgItem*>(item);
+           if (number)
+           {
+              numbers.erase(number->elementId().toLongLong());
+           }
+           removeItem(item);
+           delete item;
+        }
+    }
 }
 
 GraphicsScene::~GraphicsScene()

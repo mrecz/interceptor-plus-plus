@@ -41,6 +41,7 @@ public:
 private:
     QWidget* parent;
     bool bDrawRectEnabled;
+    bool bAddNumbersEnabled;
     class std::map<std::string, class QGraphicsPixmapItem*> objects;
     class QRectF rect;
     class QPointF origin;
@@ -50,14 +51,18 @@ private:
     class QString savePath;
     Qt::MouseButton pressedButton;
     QGraphicsItem* itemUnderCursor;
+    std::map<size_t, class QGraphicsSvgItem*> numbers;
 
     void updateItemUnderMouseCursor(const QPointF mousePos);
     void drawRect(QRectF rectangle);
     void resizeRect(RESIZE_MODE mode);
+    void deleteItem(QGraphicsSceneMouseEvent* mouseEvent, int zIndex);
+    void addNumber(QGraphicsSceneMouseEvent* mouseEvent);
 
 private slots:
     void setDrawRectStatus(bool bIsChecked);
     void handleBorderButtonChanged(bool bIsChecked);
+    void handleNumbersButtonChanged(bool bIsChecked);
 };
 
 #endif // GRAPHICSSCENE_H

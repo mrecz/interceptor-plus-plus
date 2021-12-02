@@ -15,6 +15,7 @@ enum class SCALE
 
 constexpr int CURSOR_MOVE_FACTOR{1};
 
+/** Struct is used for storing original and scaled dimensions of each connected screen */
 typedef struct Dimensions{
     Dimensions(uint32_t origWidth, uint32_t origHeight, uint32_t scalWidth, uint32_t scalHeight)
         : originalWidth(origWidth)
@@ -73,11 +74,6 @@ private:
     std::map<const QString, QSharedPointer<QPixmap>> screensBackgroundScaledMap;
     std::map<const QString, QScreen*> screens;
 
-    /** Variables for storing original and scaled screen size to transform cursor position */
-//    uint32_t originalWidth;
-//    uint32_t originalHeight;
-//    uint32_t scaledWidth;
-//    uint32_t scaledHeight;
     /** Original and Scaled dimensions of all available screens */
     std::map<const QString, Dimensions> dimensionMap;
 

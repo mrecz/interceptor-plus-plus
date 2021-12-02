@@ -29,6 +29,9 @@
         <property name="mouseTracking">
          <bool>true</bool>
         </property>
+        <property name="contextMenuPolicy">
+         <enum>Qt::DefaultContextMenu</enum>
+        </property>
         <property name="verticalScrollBarPolicy">
          <enum>Qt::ScrollBarAsNeeded</enum>
         </property>
@@ -86,6 +89,7 @@
    <addaction name="separator"/>
    <addaction name="actionBorder"/>
    <addaction name="actionAdd_Rect"/>
+   <addaction name="actionNumbers"/>
    <addaction name="separator"/>
    <addaction name="actionHelp"/>
   </widget>
@@ -222,6 +226,24 @@
    </property>
    <property name="statusTip">
     <string>Copy image to the clipboard</string>
+   </property>
+  </action>
+  <action name="actionNumbers">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/img/IconNumbers</normaloff>:/img/IconNumbers</iconset>
+   </property>
+   <property name="text">
+    <string>Numbers</string>
+   </property>
+   <property name="toolTip">
+    <string>Check to add numbers</string>
+   </property>
+   <property name="statusTip">
+    <string>Add numbers by right click; delete it by double click</string>
    </property>
   </action>
  </widget>

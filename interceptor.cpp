@@ -125,7 +125,7 @@ int Interceptor::rangeTransformFormula(const int& value, const int& origMin, con
 void Interceptor::cleanup()
 {
     screenshotMap.clear();
-    /**Multiple screens setup */
+    /** Multiple screens setup */
     screensBackgroundMap.clear();
     screensBackgroundScaledMap.clear();
 }

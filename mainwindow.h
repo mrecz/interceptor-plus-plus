@@ -50,9 +50,13 @@ private slots:
     void on_actionCopy_to_Clipboard_triggered();
 
     void saveCurrentScreenAsPixmap();
+
 #ifndef QT_NO_SYSTEMTRAYICON
     void iconActivated(QSystemTrayIcon::ActivationReason reason);
 #endif // QT_NO_SYSTEMTRAYICON
+
+    void on_actionNumbers_changed();
+
 private:
     Ui::MainWindow *ui;
 
@@ -79,6 +83,7 @@ private:
 
 signals:
     void rectButtonChanged(bool bIsChecked);
+    void numbersButtonChanged(bool bIsChecked);
     void borderButtonChanged(bool bIsChecked);
 
 };

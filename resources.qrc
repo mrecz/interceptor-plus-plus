@@ -11,5 +11,18 @@
         <file alias="IconRect">assets/icons8-full-image-50.png</file>
         <file alias="IconClipboard">assets/icons8-clipboard-48.png</file>
         <file alias="IconTray">assets/trayIcon.png</file>
+        <file alias="IconNumbers">assets/icons8-input-numbers-48.png</file>
+    </qresource>
+    <qresource prefix="/numbering">
+        <file alias="8">assets/Numbering/Eight.svg</file>
+        <file alias="5">assets/Numbering/Five.svg</file>
+        <file alias="4">assets/Numbering/Four.svg</file>
+        <file alias="9">assets/Numbering/Nine.svg</file>
+        <file alias="1">assets/Numbering/One.svg</file>
+        <file alias="7">assets/Numbering/Seven.svg</file>
+        <file alias="6">assets/Numbering/Six.svg</file>
+        <file alias="10">assets/Numbering/Ten.svg</file>
+        <file alias="3">assets/Numbering/Three.svg</file>
+        <file alias="2">assets/Numbering/Two.svg</file>
     </qresource>
 </RCC>

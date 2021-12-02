@@ -38,6 +38,7 @@ MainWindow::MainWindow(QWidget* parent)
     ui->graphicsView->setDragMode(QGraphicsView::DragMode::NoDrag);
     /** Without underlying image, drawing functionality is disabled*/
     ui->actionAdd_Rect->setDisabled(true);
+    ui->actionNumbers->setDisabled(true);
 
     /** Construct the tray icon if possible */
 #ifndef QT_NO_SYSTEMTRAYICON
@@ -86,6 +87,7 @@ void MainWindow::on_actionSave_As_triggered()
 void MainWindow::displayScreenshot()
 {
     ui->actionAdd_Rect->setDisabled(false);
+    ui->actionNumbers->setDisabled(false);
     displayMainApp();
     /** Restore the window */
     setWindowState(windowState() & ~Qt::WindowMinimized | Qt::WindowActive);
@@ -150,6 +152,11 @@ void MainWindow::on_actionHelp_triggered()
                    "<p>Existing rectangles can be moved by holding the <b>left mouse button</b> and dragging the mouse.</p>"
                    "<p>Existing rectangles can be resized by placing the cursor over the object and using the <b>mouse wheel</b>.</p>"
                    "<p>Existing rectangles can be deleted by placing the cursor over the object and double clicking with the <b>left mouse button</b>.</p>"
+                   "<p> </p>"
+                   "<p><b><u>Numbering Mode</u></b> - <i>Can be enabled by clicking on the Numbers button. Available only if the screenshot exists.</i></p>"
+                   "<p>If Numbering mode is enabled, you can add new numbers by right clicking with the <b>right mouse button</b>. The maximum number of numbers is 10 and each number can exist only once.</p>"
+                   "<p>Existing numbers can be moved by holding the <b>left mouse button</b> and dragging the mouse.</p>"
+                   "<p>Existing numbers can be deleted by placing the cursor over the number and double clicking with the <b>left mouse button</b>.</p>"
                    "<p> </p>"
                    "</hr>"
                    "<p> </p>"
@@ -220,6 +227,10 @@ void MainWindow::on_actionAbout_triggered()
 
 void MainWindow::on_actionAdd_Rect_changed()
 {
+    if (ui->actionNumbers->isChecked() && ui->actionAdd_Rect->isChecked())
+    {
+        ui->actionNumbers->setChecked(false);
+    }
     emit rectButtonChanged(ui->actionAdd_Rect->isChecked());
     if (ui->actionAdd_Rect->isChecked())
     {
@@ -287,6 +298,15 @@ void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
     }
 }
 
+void MainWindow::on_actionNumbers_changed()
+{
+   if (ui->actionAdd_Rect->isChecked() && ui->actionNumbers->isChecked())
+   {
+       ui->actionAdd_Rect->setChecked(false);
+   }
+   emit numbersButtonChanged(ui->actionNumbers->isChecked());
+}
+
 #endif // QT_NO_SYSTEMTRAYICON
 
 MainWindow::~MainWindow()
@@ -308,6 +328,9 @@ MainWindow::~MainWindow()
     delete takeScreenshotHotkey;
 #endif // _WIN32
 }
+
+
+
 
 
 
