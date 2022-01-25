@@ -18,7 +18,8 @@ SOURCES += \
     interceptor.cpp \
     main.cpp \
     mainwindow.cpp \
-    overlay.cpp
+    overlay.cpp \
+    updatebox.cpp
 
 HEADERS += \
     customeventfilter.h \
@@ -26,10 +27,12 @@ HEADERS += \
     hotkey.h \
     interceptor.h \
     mainwindow.h \
-    overlay.h
+    overlay.h \
+    updatebox.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    updatebox.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

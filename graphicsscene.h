@@ -40,6 +40,7 @@ public:
 
 private:
     QWidget* parent;
+    float numberScaleLevel;
     bool bDrawRectEnabled;
     bool bAddNumbersEnabled;
     class std::map<std::string, class QGraphicsPixmapItem*> objects;
@@ -58,6 +59,7 @@ private:
     void resizeRect(RESIZE_MODE mode);
     void deleteItem(QGraphicsSceneMouseEvent* mouseEvent, int zIndex);
     void addNumber(QGraphicsSceneMouseEvent* mouseEvent);
+    void resizeNumbers(RESIZE_MODE mode);
 
 private slots:
     void setDrawRectStatus(bool bIsChecked);

@@ -100,16 +100,16 @@ bool Overlay::event(QEvent* event)
     if (event->type() == QEvent::MouseMove)
     {
        QMouseEvent* mouse = static_cast<QMouseEvent*>(event);
+       int mouseX = mouse->pos().x();
+       int mouseY = mouse->pos().y();
+       int originX = origin.x();
+       int originY = origin.y();
 
-       /** Check if the selection is made from top left corner, or from bottom right corner */
-       if (origin.x() < mouse->pos().x())
-       {
-           selectedArea = QRect(origin, mouse->pos());
-       }
-       else
-       {
-           selectedArea = QRect(mouse->pos(), origin);
-       }
+       /** Check if the selection is made from top left/right corner, or from bottom right/left corner */
+       selectedArea = QRect(
+                   QPoint(mouseX < originX ? mouseX : originX, mouseY < originY ? mouseY : originY),
+                   QPoint(mouseX > originX ? mouseX : originX, mouseY > originY ? mouseY : originY)
+                   );
 
        if (bMousePressed)
        {

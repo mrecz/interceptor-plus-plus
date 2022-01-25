@@ -68,6 +68,7 @@
     <addaction name="actionHelp"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
+    <addaction name="actionCheck_for_Updates"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuAbout"/>
@@ -244,6 +245,11 @@
    </property>
    <property name="statusTip">
     <string>Add numbers by right click; delete it by double click</string>
+   </property>
+  </action>
+  <action name="actionCheck_for_Updates">
+   <property name="text">
+    <string>Check for Updates...</string>
    </property>
   </action>
  </widget>

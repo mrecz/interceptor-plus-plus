@@ -2,11 +2,13 @@
 #include <QMenu>
 #include <QAction>
 #include <QCloseEvent>
+#include <QTimer>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "graphicsscene.h"
 #include "overlay.h"
 #include "interceptor.h"
+#include "updatebox.h"
 #include <vector>
 
 #ifdef _WIN32
@@ -18,12 +20,13 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , interceptor(new Interceptor(this))
-    , bShouldBeTrayDialogDisplayed(true)
+    , bShouldBeTrayDialogDisplayed(true)    
 #ifdef _WIN32
     , takeScreenshotHotkey(new Hotkey(this, MODIFIERS::NOREPEAT, KEYCODES::KEY_PRINTSCR, winId(), "PrintSCR", WINDOW_TITLE))
 #endif // _WIN32    
 {
     scene = new GraphicsScene(interceptor, this);
+    //qDebug() << QCoreApplication::applicationDirPath();
 
 #ifdef _WIN32
     /** Install Windows Event Filter and register global hotkey */
@@ -49,6 +52,8 @@ MainWindow::MainWindow(QWidget* parent)
     connect(nativeEventFilter, SIGNAL(captureCurrentScreen()), this, SLOT(saveCurrentScreenAsPixmap()));
     connect(nativeEventFilter, SIGNAL(registredKeyPressed()), this, SLOT(on_actionTake_Shot_triggered()));
 #endif // _WIN32
+    /** Wait for a second and check for available updates; useful only if the application is installed by using the online installer */
+    QTimer::singleShot(1000, this, [this](void){ updateBox = new UpdateBox(); });
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)
@@ -155,6 +160,7 @@ void MainWindow::on_actionHelp_triggered()
                    "<p> </p>"
                    "<p><b><u>Numbering Mode</u></b> - <i>Can be enabled by clicking on the Numbers button. Available only if the screenshot exists.</i></p>"
                    "<p>If Numbering mode is enabled, you can add new numbers by right clicking with the <b>right mouse button</b>. The maximum number of numbers is 10 and each number can exist only once.</p>"
+                   "<p>If Numbering mode is enabled, existing numbers can be resized by using the <b>mouse wheel</b>. ALL NUMBERS ARE RESIZED AT ONCE!</p>"
                    "<p>Existing numbers can be moved by holding the <b>left mouse button</b> and dragging the mouse.</p>"
                    "<p>Existing numbers can be deleted by placing the cursor over the number and double clicking with the <b>left mouse button</b>.</p>"
                    "<p> </p>"
@@ -323,6 +329,7 @@ MainWindow::~MainWindow()
     delete ui;
     delete scene;
     delete interceptor;
+    delete updateBox;
 #ifdef _WIN32
     delete nativeEventFilter;
     delete takeScreenshotHotkey;
@@ -330,10 +337,16 @@ MainWindow::~MainWindow()
 }
 
 
-
-
-
-
-
-
+void MainWindow::on_actionCheck_for_Updates_triggered()
+{
+    bool result = updateBox->checkForUpdates();
+    if (result)
+    {
+        updateBox->show();
+    }
+    else
+    {
+        updateBox->showNoUpdatesAvailableBox(WINDOW_TITLE);
+    }
+}
 

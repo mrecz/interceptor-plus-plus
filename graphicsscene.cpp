@@ -23,11 +23,13 @@
 GraphicsScene::GraphicsScene(Interceptor* interceptor, QObject *parent)
   : QGraphicsScene(parent)
   , parent(static_cast<QWidget*>(parent))
-  , bDrawRectEnabled(false)
-  , bAddNumbersEnabled(false)
-  , interceptor(interceptor)
-  , savePath("")
+  , numberScaleLevel(1)
+  , bDrawRectEnabled(false)  
+  , bAddNumbersEnabled(false)  
+  , interceptor(interceptor)  
+  , savePath("")  
   , itemUnderCursor(nullptr)
+
 {
     connect(parent, SIGNAL(rectButtonChanged(bool)), this, SLOT(setDrawRectStatus(bool)));
     connect(parent, SIGNAL(numbersButtonChanged(bool)), this, SLOT(handleNumbersButtonChanged(bool)));
@@ -150,6 +152,17 @@ void GraphicsScene::wheelEvent(QGraphicsSceneWheelEvent* wheelEvent)
         {
           QGraphicsScene::wheelEvent(wheelEvent);
         }
+    }
+    if (bAddNumbersEnabled)
+    {
+         if (wheelEvent->delta() < 0)
+         {
+            resizeNumbers(RESIZE_MODE::MINUS);
+         }
+         else
+         {
+            resizeNumbers(RESIZE_MODE::PLUS);
+         }
     }
     QGraphicsScene::wheelEvent(wheelEvent);
     wheelEvent->accept();
@@ -278,6 +291,7 @@ void GraphicsScene::updateItemUnderMouseCursor(const QPointF mousePos)
     }
 }
 
+
 void GraphicsScene::drawRect(QRectF rectangle)
 {
     /** To ensure that rect will have correct coords in the scene, draw it on [0,0] and then set the correct scene position */
@@ -322,6 +336,29 @@ void GraphicsScene::resizeRect(RESIZE_MODE mode)
 
 }
 
+void GraphicsScene::resizeNumbers(RESIZE_MODE mode)
+{
+    if (mode == RESIZE_MODE::PLUS)
+    {
+        if (numberScaleLevel < 11.f)
+        {
+            numberScaleLevel += 0.2f;
+        }
+    }
+    else
+    {
+        if (numberScaleLevel > 0.5f)
+        {
+           numberScaleLevel -= 0.2f;
+        }
+    }
+    /** All existing numbers are resized at once by a Scale factor */
+    for (const auto& number: numbers)
+    {
+        number.second->setScale(numberScaleLevel);
+    }
+}
+
 void GraphicsScene::clearReferencedObjects()
 {
     /** Clear the map and make sure that no objects are left in memory */
@@ -361,6 +398,8 @@ void GraphicsScene::addNumber(QGraphicsSceneMouseEvent* mouseEvent)
             item->setPos(mouseEvent->scenePos());
             item->setFlags(QGraphicsItem::ItemIsMovable);
             item->setAcceptedMouseButtons(Qt::MouseButton::LeftButton);
+            /** Apply current scaler factor */
+            item->setScale(numberScaleLevel);
             numbers.insert(std::make_pair(i, item));
             break;
         }

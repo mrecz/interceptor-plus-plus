@@ -9,7 +9,7 @@
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
-
+const QString WINDOW_TITLE{"Interceptor++"};
 
 class MainWindow : public QMainWindow
 {
@@ -17,7 +17,7 @@ class MainWindow : public QMainWindow
 
 public:
     MainWindow(QWidget* parent = nullptr);
-    ~MainWindow();
+    ~MainWindow();    
 
     void notImplemented();
 
@@ -57,13 +57,15 @@ private slots:
 
     void on_actionNumbers_changed();
 
+    void on_actionCheck_for_Updates_triggered();
+
 private:
     Ui::MainWindow *ui;
 
-    const QString WINDOW_TITLE{"Interceptor++"};
     class std::vector<class Overlay*> overlays;
     class GraphicsScene* scene;
     class Interceptor* interceptor;
+    class UpdateBox* updateBox;
     bool bShouldBeTrayDialogDisplayed;
 
 #ifndef QT_NO_SYSTEMTRAYICON
