@@ -227,7 +227,9 @@ void GraphicsScene::handleNumbersButtonChanged(bool bIsChecked)
 void GraphicsScene::addImageToScene()
 {
     /** Take a captured screen from the static Interceptor class add add it to scene; store the reference in the map */
-    QGraphicsPixmapItem* img = addPixmap(*interceptor->getScreenshotMap());
+    QPixmap capturedImg = *interceptor->getScreenshotMap();
+    capturedImg.setDevicePixelRatio(1.0f);
+    QGraphicsPixmapItem* img = addPixmap(capturedImg);
     img->setPos(img->x() + 2, img->y() + 2);
     img->setZValue(1);
 
@@ -262,7 +264,10 @@ void GraphicsScene::render(MODE mode)
             /** Remember the last location selected for storing the image*/
             if (filename.lastIndexOf('/') != -1)
             {
-                savePath = filename.chopped(filename.lastIndexOf('/'));
+                savePath = filename;
+                QStringList splitedPath = savePath.split('/');
+                QString filename = splitedPath[splitedPath.length() - 1];
+                savePath = savePath.left(savePath.length() - filename.length());
             }
 
             if (!filename.isNull())

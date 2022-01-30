@@ -14,6 +14,7 @@
 #include <QIcon>
 #include <QWindow>
 #include <QPair>
+#include <QGuiApplication>
 
 
 Overlay::Overlay(Interceptor* interceptor, QScreen* scr, QWidget *parent)
@@ -21,12 +22,14 @@ Overlay::Overlay(Interceptor* interceptor, QScreen* scr, QWidget *parent)
   , bMousePressed(false)
   , bWasMainWindowVisible(true)
   , origin(QPoint())
+  , mousePos(QPoint())
   , selectedArea(QRect())
   , rubberBand(new QRubberBand(QRubberBand::Rectangle, this))
   , interceptor(interceptor)
   , zoomedArea(QPixmap())
-  , screenWidth(scr->availableGeometry().width())
-  , screenHeight(scr->availableGeometry().height())
+  , screenWidth(scr->geometry().width())
+  , screenHeight(scr->geometry().height())
+  , screen(scr)
 {
     setWindowState(Qt::WindowMaximized);
     windowHandle()->setScreen(scr);
@@ -39,6 +42,16 @@ Overlay::Overlay(Interceptor* interceptor, QScreen* scr, QWidget *parent)
     setAttribute(Qt::WA_OpaquePaintEvent);
     setStyleSheet("selection-background-color: red;");
     screenName = windowHandle()->screen()->name();
+    /** Fix a strainge beheviour, if the primary display has no scaling during startup, but the secondary display has a scale factor
+    * The secondary display resolution is not correct, the scale factor is not taken into the account
+    * If the primary display is scaled as well, the resolution is correct and no scale is necessary
+    */
+    if (QGuiApplication::primaryScreen()->devicePixelRatio() == 1)
+    {
+       screenWidth = scr->geometry().width() / devicePixelRatio();
+       screenHeight = scr->geometry().height() / devicePixelRatio();
+       setGeometry(screen->geometry().x(), screen->geometry().y(), screenWidth, screenHeight);
+    }
     hide();
 }
 
@@ -48,7 +61,7 @@ bool Overlay::event(QEvent* event)
     if (event->type() == QEvent::KeyPress)
     {
         QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
-        QPoint cursorPos = QCursor::pos();
+        QPoint cursorPos = mousePos;
 
         if (keyEvent->key() == Qt::Key_Escape)
         {
@@ -68,22 +81,26 @@ bool Overlay::event(QEvent* event)
 
         if (keyEvent->key() == Qt::Key_Left)
         {
-            QCursor::setPos(cursorPos.x() - CURSOR_MOVE_FACTOR, cursorPos.y());
+            QPoint newPos = QPoint(cursorPos.x() - CURSOR_MOVE_FACTOR, cursorPos.y());
+            QCursor::setPos(screen, mapToGlobal(newPos));
         }
 
         if (keyEvent->key() == Qt::Key_Right)
         {
-            QCursor::setPos(cursorPos.x() + CURSOR_MOVE_FACTOR, cursorPos.y());
+            QPoint newPos = QPoint(cursorPos.x() + CURSOR_MOVE_FACTOR, cursorPos.y());
+            QCursor::setPos(screen, mapToGlobal(newPos));
         }
 
         if (keyEvent->key() == Qt::Key_Up)
         {
-            QCursor::setPos(cursorPos.x(), cursorPos.y() - CURSOR_MOVE_FACTOR);
+            QPoint newPos = QPoint(cursorPos.x(), cursorPos.y() - CURSOR_MOVE_FACTOR);
+            QCursor::setPos(screen, mapToGlobal(newPos));
         }
 
         if (keyEvent->key() == Qt::Key_Down)
         {
-            QCursor::setPos(cursorPos.x(), cursorPos.y() + CURSOR_MOVE_FACTOR);
+            QPoint newPos = QPoint(cursorPos.x(), cursorPos.y() + CURSOR_MOVE_FACTOR);
+            QCursor::setPos(screen, mapToGlobal(newPos));
         }
     }
 
@@ -144,52 +161,54 @@ void Overlay::paintEvent(QPaintEvent* paintEvent)
 {
     /** Call parent function */
     QWidget::paintEvent(paintEvent);
-
+    mousePos = mapFromGlobal(QCursor::pos());
     QPainter painter(this);
+    QPixmap background =  *interceptor->getBackgroundForWidget(screenName);
+
     /** Fill widget with the pixmap background */
-    painter.drawPixmap(rect(), *interceptor->getBackgroundForWidget(screenName).get());
+    painter.drawPixmap(rect(), background);
 
     /** Multiplescreens support, check if the cursor is over the overlay on the particular screen */
-    QPoint position = mapFromGlobal(QCursor::pos());
-    if (rect().contains(position)) {
+    if (rect().contains(mousePos)) {
+        activateWindow();
         /** Creates coord lines */
-        painter.drawLine(QLineF(0, position.y(), interceptor->getScreenByName(screenName)->geometry().width(), position.y()));
-        painter.drawLine(QLineF(position.x(), 0, position.x(), interceptor->getScreenByName(screenName)->geometry().height()));
+        painter.drawLine(QLineF(0, mousePos.y(), screen->geometry().width(), mousePos.y()));
+        painter.drawLine(QLineF(mousePos.x(), 0, mousePos.x(), screen->geometry().height()));
 
         /** Zoom area around the mouse cursor */
-        QPair<int, int> corrections = interceptor->getZoomedRectangle(zoomedArea, position, screenName);
+        QPair<int, int> corrections = interceptor->getZoomedRectangle(zoomedArea, mousePos, screenName);
 
-        if (position.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenWidth &&
-            position.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenHeight )
+        if (mousePos.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenWidth &&
+            mousePos.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenHeight )
         {
-            int zoomedAreaX = position.x() - (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH));
-            int zoomedAreaY = position.y() - (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT));
+            int zoomedAreaX = mousePos.x() - (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH));
+            int zoomedAreaY = mousePos.y() - (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT));
             drawZoomedArea(painter, zoomedAreaX, zoomedAreaY, corrections);
         }
-        else if (position.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenWidth &&
-                 position.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) < screenHeight )
+        else if (mousePos.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenWidth &&
+                 mousePos.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) < screenHeight )
         {
-            int zoomedAreaX = position.x() - (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH));
-            int zoomedAreaY = position.y() + (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET));
+            int zoomedAreaX = mousePos.x() - (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH));
+            int zoomedAreaY = mousePos.y() + (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET));
             drawZoomedArea(painter, zoomedAreaX, zoomedAreaY, corrections);
         }
-        else if (position.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenHeight )
+        else if (mousePos.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenHeight )
         {
-            int zoomedAreaX = position.x() + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET);
-            int zoomedAreaY = position.y() - (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT));
+            int zoomedAreaX = mousePos.x() + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET);
+            int zoomedAreaY = mousePos.y() - (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT));
             drawZoomedArea(painter, zoomedAreaX, zoomedAreaY, corrections);
         }
         else
         {
-            int zoomedAreaX = position.x() + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET);
-            int zoomedAreaY = position.y() + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET);
+            int zoomedAreaX = mousePos.x() + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET);
+            int zoomedAreaY = mousePos.y() + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET);
             drawZoomedArea(painter, zoomedAreaX, zoomedAreaY, corrections);
         }
     }
     else
     {
         painter.eraseRect(rect());
-        painter.drawPixmap(rect(), *interceptor->getBackgroundForWidget(screenName).get());
+        painter.drawPixmap(rect(), background);
     }
 }
 
@@ -199,7 +218,6 @@ void Overlay::drawZoomedArea(QPainter& painter, int& zoomedAreaX, int& zoomedAre
     pen.setColor(QColor(Qt::black));
     pen.setWidth(2);
     painter.setPen(pen);
-
     painter.drawRect(zoomedAreaX - 2, zoomedAreaY - 2, zoomedArea.width() + 4, zoomedArea.height() + 4);
     painter.drawPixmap(zoomedAreaX,
                        zoomedAreaY,

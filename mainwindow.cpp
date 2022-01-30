@@ -26,7 +26,6 @@ MainWindow::MainWindow(QWidget* parent)
 #endif // _WIN32    
 {
     scene = new GraphicsScene(interceptor, this);
-    //qDebug() << QCoreApplication::applicationDirPath();
 
 #ifdef _WIN32
     /** Install Windows Event Filter and register global hotkey */

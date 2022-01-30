@@ -12,7 +12,6 @@ int main(int argc, char *argv[])
         QApplication::setQuitOnLastWindowClosed(false);
     }
 #endif // QT_NO_SYSTEMTRAYICON
-
     MainWindow w;
     w.show();
     return a.exec();

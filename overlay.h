@@ -18,6 +18,7 @@ private:
     bool bMousePressed;
     bool bWasMainWindowVisible;
     class QPoint origin;
+    QPoint mousePos;
     class QRect selectedArea;
     class QRubberBand* rubberBand;
     Interceptor* interceptor;
@@ -26,6 +27,7 @@ private:
     void drawZoomedArea(QPainter& painter, int& zoomedAreaX, int& zoomedAreaY, QPair<int, int>& corrections);
     int screenWidth;
     int screenHeight;
+    QScreen* screen;
 
 public:
     inline void setWasMainWindowVisible(bool bWasActive) { bWasMainWindowVisible = bWasActive; };

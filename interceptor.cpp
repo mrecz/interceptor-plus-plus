@@ -17,8 +17,11 @@ Interceptor::Interceptor(class QWidget* widget)
 
 void Interceptor::saveScreenPartAsPixelMap(QRect rect, const QString srcName)
 {
-
-    QRect cropped = QRect(rect.x(), rect.y(), rect.width(), rect.height());
+    /** To make sure that the correct part of the screen is taken, multiply the coords by the device pixel ratio
+    *   If Windows Scaling is enabled, this is necessary step
+    */
+    float DPI = getScreenByName(srcName)->devicePixelRatio(); // TODO
+    QRect cropped = QRect(rect.x() * DPI, rect.y() * DPI, rect.width() * DPI, rect.height() * DPI);
     screenshotMap = QSharedPointer<QPixmap>(new QPixmap(getBackgroundForWidget(srcName)->copy(cropped)));
 }
 
@@ -40,8 +43,7 @@ void Interceptor::saveScreensBackgroundAsPixmap()
     {
         /** Each screen will have an overlay with the background stored here */
         QPixmap scrGrab = screen.second->grabWindow(0);
-        screensBackgroundMap.insert(std::make_pair(screen.second->name(), QSharedPointer<QPixmap>(new QPixmap(scrGrab))));
-
+        screensBackgroundMap.insert(std::make_pair(screen.second->name(), QSharedPointer<QPixmap>(new QPixmap(scrGrab))));        
         /** Store original dimensions */
         int originalWidth{ scrGrab.width() };
         int originalHeight{ scrGrab.height() };
@@ -63,7 +65,8 @@ void Interceptor::saveScreensBackgroundAsPixmap()
 
 QPair<int, int> Interceptor::getZoomedRectangle(QPixmap& destArea, QPoint cursorPos, const QString srcName)
 {
-    QPoint scaledCursorPos = getTransformedCursorPosition(cursorPos, srcName);
+    float DPI = getScreenByName(srcName)->devicePixelRatio();
+    QPoint scaledCursorPos = getTransformedCursorPosition(cursorPos * DPI, srcName);
     uint32_t scaledWidth = dimensionMap.at(srcName).scaledWidth;
     uint32_t scaledHeight = dimensionMap.at(srcName).scaledHeight;
     int offsetX = scaledCursorPos.x() - (static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2);
@@ -82,6 +85,7 @@ QPair<int, int> Interceptor::getZoomedRectangle(QPixmap& destArea, QPoint cursor
                           static_cast<int>(SCALE::ZOOMED_AREA_WIDTH),
                           static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT));
     destArea = getScaledBackgroundForWidget(srcName)->copy(cropped);
+    destArea.setDevicePixelRatio(1.f);
 
     /** Corrections for crosshair drawn by Overlay widget: negative for offset and positive for overflow */
     int correctionX{ 0 };
