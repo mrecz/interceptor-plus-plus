@@ -49,7 +49,7 @@ void Interceptor::saveScreensBackgroundAsPixmap()
         int originalHeight{ scrGrab.height() };
 
         /** Original screen grab is scaled by using the scale factor defined in the header file */
-        scrGrab = scrGrab.scaledToWidth(scrGrab.width() * static_cast<int>(SCALE::SCALE_FACTOR));
+        scrGrab = scrGrab.scaledToWidth(scrGrab.width() * static_cast<int>(uts::SCALE::SCALE_FACTOR));
 
         /** Store scaled dimensions */
         int scaledWidth{ scrGrab.width() };
@@ -59,7 +59,7 @@ void Interceptor::saveScreensBackgroundAsPixmap()
         screensBackgroundScaledMap.insert(std::make_pair(screen.second->name(), QSharedPointer<QPixmap>(new QPixmap(scrGrab))));
 
         /** Store dimensions of a screen for further usage */
-        dimensionMap.insert(std::make_pair(screen.first, Dimensions(originalWidth, originalHeight, scaledWidth, scaledHeight)));
+        dimensionMap.insert(std::make_pair(screen.first, uts::Dimensions(originalWidth, originalHeight, scaledWidth, scaledHeight)));
     }
 }
 
@@ -69,21 +69,21 @@ QPair<int, int> Interceptor::getZoomedRectangle(QPixmap& destArea, QPoint cursor
     QPoint scaledCursorPos = getTransformedCursorPosition(cursorPos * DPI, srcName);
     uint32_t scaledWidth = dimensionMap.at(srcName).scaledWidth;
     uint32_t scaledHeight = dimensionMap.at(srcName).scaledHeight;
-    int offsetX = scaledCursorPos.x() - (static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2);
-    int offsetY = scaledCursorPos.y() - (static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) / 2);
+    int offsetX = scaledCursorPos.x() - (static_cast<int>(uts::SCALE::ZOOMED_AREA_WIDTH) / 2);
+    int offsetY = scaledCursorPos.y() - (static_cast<int>(uts::SCALE::ZOOMED_AREA_HEIGHT) / 2);
     /** Check if the offset is a negative number, if so set the minimum - 0 */
     int positionX = offsetX < 0 ? 0 : offsetX;
     int positionY = offsetY < 0 ? 0 : offsetY;
     /** Check if the mouseCursor position + zoomed area size is higher than max dimension, if so set the maximum value - (scaled - ZOOMED_AREA_WIDTH) */
-    int overflowX = static_cast<int>(scaledWidth - (scaledCursorPos.x() + (static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2)));
-    int overflowY = static_cast<int>(scaledHeight - (scaledCursorPos.y() + (static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) / 2)));
-    if (overflowX < 0) positionX = scaledWidth  - static_cast<int>(SCALE::ZOOMED_AREA_WIDTH);
-    if (overflowY < 0) positionY = scaledHeight - static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT);
+    int overflowX = static_cast<int>(scaledWidth - (scaledCursorPos.x() + (static_cast<int>(uts::SCALE::ZOOMED_AREA_WIDTH) / 2)));
+    int overflowY = static_cast<int>(scaledHeight - (scaledCursorPos.y() + (static_cast<int>(uts::SCALE::ZOOMED_AREA_HEIGHT) / 2)));
+    if (overflowX < 0) positionX = scaledWidth  - static_cast<int>(uts::SCALE::ZOOMED_AREA_WIDTH);
+    if (overflowY < 0) positionY = scaledHeight - static_cast<int>(uts::SCALE::ZOOMED_AREA_HEIGHT);
 
     QRect cropped = QRect(positionX,
                           positionY,
-                          static_cast<int>(SCALE::ZOOMED_AREA_WIDTH),
-                          static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT));
+                          static_cast<int>(uts::SCALE::ZOOMED_AREA_WIDTH),
+                          static_cast<int>(uts::SCALE::ZOOMED_AREA_HEIGHT));
     destArea = getScaledBackgroundForWidget(srcName)->copy(cropped);
     destArea.setDevicePixelRatio(1.f);
 

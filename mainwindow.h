@@ -8,7 +8,16 @@
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
+class Overlay;
+class QMenu;
+class QAction;
 QT_END_NAMESPACE
+class GraphicsScene;
+class Interceptor;
+class UpdateBox;
+class CustomEventFilter;
+class Hotkey;
+
 const QString WINDOW_TITLE{"Interceptor++"};
 
 class MainWindow : public QMainWindow
@@ -23,6 +32,35 @@ public:
 
 protected:
     void closeEvent(class QCloseEvent* event) override;
+
+private:
+    Ui::MainWindow *ui;
+
+    std::vector<Overlay*> overlays;
+    GraphicsScene* scene;
+    Interceptor* interceptor;
+    UpdateBox* updateBox;
+    bool bShouldBeTrayDialogDisplayed;
+
+#ifndef QT_NO_SYSTEMTRAYICON
+    QSystemTrayIcon* trayIcon;
+    QMenu* trayMenu;
+    QAction* minimizeAction;
+    QAction* maximizeAction;
+    QAction* restoreAction;
+    QAction* quitAction;
+    void createTrayIcon();
+#endif // QT_NO_SYSTEMTRAYICON
+
+#ifdef _WIN32
+    CustomEventFilter* nativeEventFilter;
+    Hotkey* takeScreenshotHotkey;
+#endif // _WIN32
+
+signals:
+    void rectButtonChanged(bool bIsChecked);
+    void numbersButtonChanged(bool bIsChecked);
+    void borderButtonChanged(bool bIsChecked);
 
 private slots:
     void on_actionExit_triggered();
@@ -58,35 +96,6 @@ private slots:
     void on_actionNumbers_changed();
 
     void on_actionCheck_for_Updates_triggered();
-
-private:
-    Ui::MainWindow *ui;
-
-    class std::vector<class Overlay*> overlays;
-    class GraphicsScene* scene;
-    class Interceptor* interceptor;
-    class UpdateBox* updateBox;
-    bool bShouldBeTrayDialogDisplayed;
-
-#ifndef QT_NO_SYSTEMTRAYICON
-    QSystemTrayIcon* trayIcon;
-    class QMenu* trayMenu;
-    class QAction* minimizeAction;
-    QAction* maximizeAction;
-    QAction* restoreAction;
-    QAction* quitAction;
-    void createTrayIcon();
-#endif // QT_NO_SYSTEMTRAYICON
-
-#ifdef _WIN32
-    class CustomEventFilter* nativeEventFilter;
-    class Hotkey* takeScreenshotHotkey;
-#endif // _WIN32
-
-signals:
-    void rectButtonChanged(bool bIsChecked);
-    void numbersButtonChanged(bool bIsChecked);
-    void borderButtonChanged(bool bIsChecked);
 
 };
 #endif // MAINWINDOW_H

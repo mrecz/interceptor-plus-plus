@@ -10,6 +10,7 @@
 #include "interceptor.h"
 #include "updatebox.h"
 #include <vector>
+#include "utilities.h"
 
 #ifdef _WIN32
 #include "hotkey.h"
@@ -22,7 +23,7 @@ MainWindow::MainWindow(QWidget* parent)
     , interceptor(new Interceptor(this))
     , bShouldBeTrayDialogDisplayed(true)    
 #ifdef _WIN32
-    , takeScreenshotHotkey(new Hotkey(this, MODIFIERS::NOREPEAT, KEYCODES::KEY_PRINTSCR, winId(), "PrintSCR", WINDOW_TITLE))
+    , takeScreenshotHotkey(new Hotkey(this, uts::MODIFIERS::NOREPEAT, uts::KEYCODES::KEY_PRINTSCR, winId(), "PrintSCR", WINDOW_TITLE))
 #endif // _WIN32    
 {
     scene = new GraphicsScene(interceptor, this);

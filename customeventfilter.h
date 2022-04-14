@@ -17,10 +17,6 @@ public:
 protected:
     bool nativeEventFilter(const QByteArray &eventType, void* message, long long* result) override;
 
-signals:
-    void registredKeyPressed();
-    void captureCurrentScreen();
-
 private:
     std::vector<HWND> winIDs;
 
@@ -36,7 +32,12 @@ public:
         }
     }
 
+signals:
+    void registredKeyPressed();
+    void captureCurrentScreen();
+
 };
+
 
 #endif // CUSTOMEVENTFILTER_H
 #endif // _WIN32

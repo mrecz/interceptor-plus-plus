@@ -5,43 +5,25 @@
 
 #include "Windows.h"
 #include "QString"
+#include "utilities.h"
 
-/** All modifiers supported by Win32 API */
-enum class MODIFIERS
-{
-    ALT         = 0x0001,
-    CONTROL     = 0x0002,
-    NOREPEAT    = 0x4000,
-    SHIFT       = 0x0004,
-    WIN         = 0x0008
-};
-
-inline MODIFIERS operator|(MODIFIERS mod1, MODIFIERS mod2)
-{
-    return static_cast<MODIFIERS>(static_cast<int>(mod1) | static_cast<int>(mod2));
-}
-
-/** Subset of Virtual Key codes supported by Win32 API */
-enum class KEYCODES
-{
-    KEY_T           = 0x54,
-    KEY_P           = 0x50,
-    KEY_PRINTSCR    = 0x2C
-};
+QT_BEGIN_NAMESPACE
+class QWidget;
+QT_END_NAMESPACE
 
 class Hotkey
 {
 public:
-    Hotkey(class QWidget* application);
-    Hotkey(QWidget* application, MODIFIERS fsModifiers, KEYCODES keyCode, int winId, QString shortcutName, QString windowTitle);
+    Hotkey(QWidget* application);
+    Hotkey(QWidget* application, uts::MODIFIERS fsModifiers, uts::KEYCODES keyCode, int winId, QString shortcutName, QString windowTitle);
     ~Hotkey();
 
 private:
     Hotkey() = default;
     HWND hWnd;
     unsigned int id;
-    MODIFIERS fsModifiers;
-    KEYCODES keyCode;
+    uts::MODIFIERS fsModifiers;
+    uts::KEYCODES keyCode;
     bool bIsRegistred;
     QWidget* application;
     const QString SHORTCUT_NAME;

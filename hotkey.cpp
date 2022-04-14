@@ -7,8 +7,8 @@
 Hotkey::Hotkey(QWidget* application)
   : hWnd(NULL)
   , id(generateHotkeyId())
-  , fsModifiers(MODIFIERS::CONTROL | MODIFIERS::NOREPEAT)
-  , keyCode(KEYCODES::KEY_T)
+  , fsModifiers(uts::MODIFIERS::CONTROL | uts::MODIFIERS::NOREPEAT)
+  , keyCode(uts::KEYCODES::KEY_T)
   , bIsRegistred(false)
   , application(application)
   , SHORTCUT_NAME("")
@@ -17,7 +17,7 @@ Hotkey::Hotkey(QWidget* application)
    registerHotKey();
 }
 
-Hotkey::Hotkey(QWidget* application, MODIFIERS fsModifiers, KEYCODES keyCode, int winId, QString shortcutName, QString windowTitle)
+Hotkey::Hotkey(QWidget* application, uts::MODIFIERS fsModifiers, uts::KEYCODES keyCode, int winId, QString shortcutName, QString windowTitle)
   : hWnd(static_cast<HWND>(IntToPtr(winId)))
   , id(generateHotkeyId())
   , fsModifiers(fsModifiers)

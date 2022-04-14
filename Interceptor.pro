@@ -19,6 +19,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     overlay.cpp \
+    sceneitem.cpp \
     updatebox.cpp
 
 HEADERS += \
@@ -28,7 +29,9 @@ HEADERS += \
     interceptor.h \
     mainwindow.h \
     overlay.h \
-    updatebox.h
+    sceneitem.h \
+    updatebox.h \
+    utilities.h
 
 FORMS += \
     mainwindow.ui \

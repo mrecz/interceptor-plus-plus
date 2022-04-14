@@ -3,11 +3,18 @@
 
 #include <QWidget>
 
+QT_BEGIN_NAMESPACE
+class QPoint;
+class QRect;
+class QRubberBand;
+QT_END_NAMESPACE
+class Interceptor;
+
 class Overlay : public QWidget
 {
     Q_OBJECT
 public:
-    explicit Overlay(class Interceptor* interceptor, QScreen* scr, QWidget* parent = nullptr);
+    explicit Overlay(Interceptor* interceptor, QScreen* scr, QWidget* parent = nullptr);
     ~Overlay();
 
 protected:
@@ -17,10 +24,10 @@ protected:
 private:
     bool bMousePressed;
     bool bWasMainWindowVisible;
-    class QPoint origin;
+    QPoint origin;
     QPoint mousePos;
-    class QRect selectedArea;
-    class QRubberBand* rubberBand;
+    QRect selectedArea;
+    QRubberBand* rubberBand;
     Interceptor* interceptor;
     QPixmap zoomedArea;
     QString screenName;

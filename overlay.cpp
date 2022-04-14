@@ -1,5 +1,6 @@
 #include "overlay.h"
 #include "interceptor.h"
+#include "utilities.h"
 
 #include <QObject>
 #include <QEvent>
@@ -81,25 +82,25 @@ bool Overlay::event(QEvent* event)
 
         if (keyEvent->key() == Qt::Key_Left)
         {
-            QPoint newPos = QPoint(cursorPos.x() - CURSOR_MOVE_FACTOR, cursorPos.y());
+            QPoint newPos = QPoint(cursorPos.x() - uts::CURSOR_MOVE_FACTOR, cursorPos.y());
             QCursor::setPos(screen, mapToGlobal(newPos));
         }
 
         if (keyEvent->key() == Qt::Key_Right)
         {
-            QPoint newPos = QPoint(cursorPos.x() + CURSOR_MOVE_FACTOR, cursorPos.y());
+            QPoint newPos = QPoint(cursorPos.x() + uts::CURSOR_MOVE_FACTOR, cursorPos.y());
             QCursor::setPos(screen, mapToGlobal(newPos));
         }
 
         if (keyEvent->key() == Qt::Key_Up)
         {
-            QPoint newPos = QPoint(cursorPos.x(), cursorPos.y() - CURSOR_MOVE_FACTOR);
+            QPoint newPos = QPoint(cursorPos.x(), cursorPos.y() - uts::CURSOR_MOVE_FACTOR);
             QCursor::setPos(screen, mapToGlobal(newPos));
         }
 
         if (keyEvent->key() == Qt::Key_Down)
         {
-            QPoint newPos = QPoint(cursorPos.x(), cursorPos.y() + CURSOR_MOVE_FACTOR);
+            QPoint newPos = QPoint(cursorPos.x(), cursorPos.y() + uts::CURSOR_MOVE_FACTOR);
             QCursor::setPos(screen, mapToGlobal(newPos));
         }
     }
@@ -178,30 +179,30 @@ void Overlay::paintEvent(QPaintEvent* paintEvent)
         /** Zoom area around the mouse cursor */
         QPair<int, int> corrections = interceptor->getZoomedRectangle(zoomedArea, mousePos, screenName);
 
-        if (mousePos.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenWidth &&
-            mousePos.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenHeight )
+        if (mousePos.x() + static_cast<int>(uts::SCALE::ZOOMED_AREA_WIDTH) + static_cast<int>(uts::SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenWidth &&
+            mousePos.y() + static_cast<int>(uts::SCALE::ZOOMED_AREA_HEIGHT) + static_cast<int>(uts::SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenHeight )
         {
-            int zoomedAreaX = mousePos.x() - (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH));
-            int zoomedAreaY = mousePos.y() - (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT));
+            int zoomedAreaX = mousePos.x() - (static_cast<int>(uts::SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(uts::SCALE::ZOOMED_AREA_WIDTH));
+            int zoomedAreaY = mousePos.y() - (static_cast<int>(uts::SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(uts::SCALE::ZOOMED_AREA_HEIGHT));
             drawZoomedArea(painter, zoomedAreaX, zoomedAreaY, corrections);
         }
-        else if (mousePos.x() + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenWidth &&
-                 mousePos.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) < screenHeight )
+        else if (mousePos.x() + static_cast<int>(uts::SCALE::ZOOMED_AREA_WIDTH) + static_cast<int>(uts::SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenWidth &&
+                 mousePos.y() + static_cast<int>(uts::SCALE::ZOOMED_AREA_HEIGHT) + static_cast<int>(uts::SCALE::ZOOMED_AREA_CURSOR_OFFSET) < screenHeight )
         {
-            int zoomedAreaX = mousePos.x() - (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH));
-            int zoomedAreaY = mousePos.y() + (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET));
+            int zoomedAreaX = mousePos.x() - (static_cast<int>(uts::SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(uts::SCALE::ZOOMED_AREA_WIDTH));
+            int zoomedAreaY = mousePos.y() + (static_cast<int>(uts::SCALE::ZOOMED_AREA_CURSOR_OFFSET));
             drawZoomedArea(painter, zoomedAreaX, zoomedAreaY, corrections);
         }
-        else if (mousePos.y() + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenHeight )
+        else if (mousePos.y() + static_cast<int>(uts::SCALE::ZOOMED_AREA_HEIGHT) + static_cast<int>(uts::SCALE::ZOOMED_AREA_CURSOR_OFFSET) > screenHeight )
         {
-            int zoomedAreaX = mousePos.x() + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET);
-            int zoomedAreaY = mousePos.y() - (static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT));
+            int zoomedAreaX = mousePos.x() + static_cast<int>(uts::SCALE::ZOOMED_AREA_CURSOR_OFFSET);
+            int zoomedAreaY = mousePos.y() - (static_cast<int>(uts::SCALE::ZOOMED_AREA_CURSOR_OFFSET) + static_cast<int>(uts::SCALE::ZOOMED_AREA_HEIGHT));
             drawZoomedArea(painter, zoomedAreaX, zoomedAreaY, corrections);
         }
         else
         {
-            int zoomedAreaX = mousePos.x() + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET);
-            int zoomedAreaY = mousePos.y() + static_cast<int>(SCALE::ZOOMED_AREA_CURSOR_OFFSET);
+            int zoomedAreaX = mousePos.x() + static_cast<int>(uts::SCALE::ZOOMED_AREA_CURSOR_OFFSET);
+            int zoomedAreaY = mousePos.y() + static_cast<int>(uts::SCALE::ZOOMED_AREA_CURSOR_OFFSET);
             drawZoomedArea(painter, zoomedAreaX, zoomedAreaY, corrections);
         }
     }
@@ -231,14 +232,14 @@ void Overlay::drawZoomedArea(QPainter& painter, int& zoomedAreaX, int& zoomedAre
 
     /** Horizontal */
     painter.drawLine(QLineF(zoomedAreaX,
-                            zoomedAreaY + corrections.second + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) / 2,
-                            zoomedAreaX + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH),
-                            zoomedAreaY + corrections.second + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT) / 2));
+                            zoomedAreaY + corrections.second + static_cast<int>(uts::SCALE::ZOOMED_AREA_HEIGHT) / 2,
+                            zoomedAreaX + static_cast<int>(uts::SCALE::ZOOMED_AREA_WIDTH),
+                            zoomedAreaY + corrections.second + static_cast<int>(uts::SCALE::ZOOMED_AREA_HEIGHT) / 2));
     /** Vertical */
-    painter.drawLine(QLineF(zoomedAreaX + corrections.first + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2,
+    painter.drawLine(QLineF(zoomedAreaX + corrections.first + static_cast<int>(uts::SCALE::ZOOMED_AREA_WIDTH) / 2,
                             zoomedAreaY,
-                            zoomedAreaX + corrections.first + static_cast<int>(SCALE::ZOOMED_AREA_WIDTH) / 2,
-                            zoomedAreaY + static_cast<int>(SCALE::ZOOMED_AREA_HEIGHT)));
+                            zoomedAreaX + corrections.first + static_cast<int>(uts::SCALE::ZOOMED_AREA_WIDTH) / 2,
+                            zoomedAreaY + static_cast<int>(uts::SCALE::ZOOMED_AREA_HEIGHT)));
 }
 
 Overlay::~Overlay()
