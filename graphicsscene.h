@@ -55,7 +55,7 @@ private:
     class QRectF rect;
     class QPointF origin;
     const QPen PEN{ QPen(QPen(Qt::red, 2)) };
-    const QColor BORDER_COLOR{ QColor(203, 203, 203) };
+    const QColor BORDER_COLOR{ QColor(228, 228, 228) };
     Interceptor* interceptor;
     class QString savePath;
     Qt::MouseButton pressedButton;

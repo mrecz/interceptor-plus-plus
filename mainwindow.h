@@ -64,29 +64,17 @@ signals:
 
 private slots:
     void on_actionExit_triggered();
-
     void on_actionHelp_triggered();
-
     void on_actionSave_triggered();
-
     void on_actionAbout_triggered();
-
     void on_actionSave_As_triggered();
-
     void on_actionTake_Shot_triggered();
-
     void displayScreenshot();
-
     void on_actionAdd_Rect_changed();
-
     void displayMainApp();
-
     void deleteOverlays();
-
     void on_actionBorder_changed();
-
     void on_actionCopy_to_Clipboard_triggered();
-
     void saveCurrentScreenAsPixmap();
 
 #ifndef QT_NO_SYSTEMTRAYICON
@@ -94,7 +82,6 @@ private slots:
 #endif // QT_NO_SYSTEMTRAYICON
 
     void on_actionNumbers_changed();
-
     void on_actionCheck_for_Updates_triggered();
 
 };

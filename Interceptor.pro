@@ -3,7 +3,7 @@ QT       += svgwidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++11
+CONFIG += /std:c++latest
 
 LIBS += -lUser32
 

@@ -274,19 +274,19 @@ void MainWindow::createTrayIcon()
     connect(quitAction, &QAction::triggered, qApp, &QCoreApplication::quit);
 
     trayMenu = new QMenu(this);
+    trayIcon = new QSystemTrayIcon(this);
+    trayIcon->setContextMenu(trayMenu);
+    QIcon icon = QIcon(":/img/IconTray");
+    trayIcon->setIcon(icon);
+    trayIcon->setToolTip(WINDOW_TITLE);
+
     trayMenu->addAction(restoreAction);
     trayMenu->addAction(minimizeAction);
     trayMenu->addAction(maximizeAction);
     trayMenu->addSeparator();
     trayMenu->addAction(quitAction);
 
-    trayIcon = new QSystemTrayIcon(this);
-    trayIcon->setContextMenu(trayMenu);
 
-    QIcon icon = QIcon(":/img/IconTray");
-
-    trayIcon->setIcon(icon);
-    trayIcon->setToolTip(WINDOW_TITLE);
     trayIcon->show();
 }
 
